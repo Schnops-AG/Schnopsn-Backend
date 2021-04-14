@@ -27,7 +27,7 @@ public class AccessController {
 
     @PostMapping(path = "/test")
     public Object postTest(@RequestBody User user){
-        User u1 = userService.getUserByID(user.getUserID());
+      //  User u1 = userService.getUserByID(user.getUserID());
 
         return ResponseEntity.status(200).body("Hello " + user);
     }

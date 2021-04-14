@@ -9,8 +9,9 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class User {
+public class User extends Player{
 
     private String password;
     private String email;
+    private Statistic statistic;
 }
