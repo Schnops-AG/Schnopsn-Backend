@@ -1,10 +1,5 @@
 package at.kaindorf.schnopsn.beans;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@AllArgsConstructor
-@Getter
 public enum Call {
     NORMAL("Normal",0), BETTLER("Bettler",5),
     SCHNAPSER("Schnapser",6),ASSENBETTLER("AssenBettler",7),
@@ -16,4 +11,16 @@ public enum Call {
 
     private final String callName;
     private final Integer value;
+
+    Call(String callName, Integer value) {
+        this.callName = callName;
+        this.value = value;
+    }
+
+    public String getCallName() {
+        return callName;
+    }
+    public Integer getValue() {
+        return value;
+    }
 }
