@@ -5,10 +5,7 @@ import at.kaindorf.schnopsn.beans.GameType;
 import at.kaindorf.schnopsn.beans.Player;
 import at.kaindorf.schnopsn.beans.User;
 import at.kaindorf.schnopsn.bl.GameLogic;
-import at.kaindorf.schnopsn.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -21,9 +18,9 @@ import java.util.UUID;
 public class AccessController {
 
     //private final UserService userService;
-    private GameLogic logic = new GameLogic();
+    private final GameLogic logic = new GameLogic();
     private List<Game> activeGames = new ArrayList<>();
-    private List<Player> activePlayer = new ArrayList<>();
+    private List<Player> activePlayers = new ArrayList<>();
 
     /*@Autowired
     public AccessController(UserService userService) {
@@ -41,28 +38,28 @@ public class AccessController {
     }
 
     @PostMapping(path = "/createPlayer")
-    public Object createUser(@RequestBody String playername){
-        Player newPlayer = new Player(UUID.randomUUID(),playername,false,true);
-        activePlayer.add(newPlayer);
+    public Object createUser(@RequestBody String playerName){
+        Player newPlayer = new Player(UUID.randomUUID(),playerName,false,true);
+        activePlayers.add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
 
     @PostMapping(path = "/createGame")
-    public Object creatGame(@RequestBody String gameType, @NonNull String playerid){
+    public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerid){
         System.out.println(playerid);
         UUID realPlayerid = UUID.fromString(playerid);
         GameType realGameType = GameType.valueOf(gameType);
 
-        Player player = activePlayer.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerid)).findFirst().orElse(null);
+        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerid)).findFirst().orElse(null);
         Game newGame = logic.createGame(realGameType,player);
         activeGames.add(newGame);
         return ResponseEntity.status(200).body(newGame);
     }
 
     @PostMapping(path = "/joinGame")
-    public Object creatGame(@RequestBody UUID gameid, UUID playerid) {
-        Player player = activePlayer.stream().filter(player1 -> player1.getPlayerid().equals(playerid)).findFirst().orElse(null);
-        Game game = activeGames.stream().filter(game1 -> game1.getGameid().equals(gameid)).findFirst().orElse(null);
+    public Object joinGame(@RequestBody UUID gameID, UUID playerID) {
+        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(playerID)).findFirst().orElse(null);
+        Game game = activeGames.stream().filter(game1 -> game1.getGameid().equals(gameID)).findFirst().orElse(null);
 
         if(game.getTeams().get(0).getPlayers().size() < 2){
             game.getTeams().get(0).getPlayers().add(player);
