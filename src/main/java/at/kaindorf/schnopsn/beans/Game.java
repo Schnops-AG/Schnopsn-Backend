@@ -24,6 +24,7 @@ public class Game {
         this.currentTrump = currentTrump;
     }
 
+    // region <getter, setter, toString>
     public UUID getGameid() {
         return gameid;
     }
@@ -74,4 +75,6 @@ public class Game {
                 ", currentTrump=" + currentTrump +
                 '}';
     }
+
+    //endregion
 }

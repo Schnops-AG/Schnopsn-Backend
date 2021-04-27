@@ -1,16 +1,12 @@
 package at.kaindorf.schnopsn.api;
 
-import at.kaindorf.schnopsn.beans.Game;
-import at.kaindorf.schnopsn.beans.GameType;
-import at.kaindorf.schnopsn.beans.Player;
-import at.kaindorf.schnopsn.beans.User;
+import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("api/v1")
@@ -46,7 +42,6 @@ public class AccessController {
 
     @PostMapping(path = "/createGame")
     public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerid){
-        System.out.println(playerid);
         UUID realPlayerid = UUID.fromString(playerid);
         GameType realGameType = GameType.valueOf(gameType);
 
@@ -57,9 +52,11 @@ public class AccessController {
     }
 
     @PostMapping(path = "/joinGame")
-    public Object joinGame(@RequestBody UUID gameID, UUID playerID) {
-        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(playerID)).findFirst().orElse(null);
-        Game game = activeGames.stream().filter(game1 -> game1.getGameid().equals(gameID)).findFirst().orElse(null);
+    public Object joinGame(@RequestParam("gameID") String gameID,@RequestParam("playerID") String playerID) {
+        UUID realGameID = UUID.fromString(gameID);
+        UUID realPlayerID = UUID.fromString(playerID);
+        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerID)).findFirst().orElse(null);
+        Game game = activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null);
 
         if(game.getTeams().get(0).getPlayers().size() < 2){
             game.getTeams().get(0).getPlayers().add(player);
@@ -67,8 +64,30 @@ public class AccessController {
         else if(game.getTeams().get(1).getPlayers().size() < 2){
             game.getTeams().get(1).getPlayers().add(player);
         }
-
-        return ResponseEntity.status(200).body("joined game successfully");
+        System.out.println(game);
+        activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setTeams(game.getTeams());
+        return ResponseEntity.status(200).body(game);
     }
+    @PostMapping(path = "/makeCall")
+    public Object makeCall(@RequestBody String jsonMap) {
+        try {
+            Map<String,String> result = new ObjectMapper().readValue(jsonMap, LinkedHashMap.class);
+            //System.out.println(result);
+            UUID playerWithHighestAnsage = null;
+            int highestVal = 0;
+            for (String id : result.keySet()) {
+                //System.out.println(result.get(id));
+                int value = Call.valueOf(result.get(id).toUpperCase()).getValue();
+                if(value > highestVal){
+                    highestVal = value;
+                    playerWithHighestAnsage = UUID.fromString(id);
+                }
+            }
+            return ResponseEntity.status(200).body(playerWithHighestAnsage);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
+        return null;
+    }
 }

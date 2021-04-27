@@ -20,6 +20,7 @@ public class User extends Player{
         this.statistic = statistic;
     }
 
+    // region <getter, setter, toString>
     public String getPassword() {
         return password;
     }
@@ -52,4 +53,5 @@ public class User extends Player{
                 ", statistic=" + statistic +
                 '}';
     }
+    //endregion
 }

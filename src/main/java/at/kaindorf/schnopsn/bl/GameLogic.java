@@ -1,14 +1,10 @@
 package at.kaindorf.schnopsn.bl;
 
-import at.kaindorf.schnopsn.beans.Game;
-import at.kaindorf.schnopsn.beans.GameType;
-import at.kaindorf.schnopsn.beans.Player;
-import at.kaindorf.schnopsn.beans.Team;
+import at.kaindorf.schnopsn.beans.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 public class GameLogic {
@@ -35,7 +31,5 @@ public class GameLogic {
         return inviteLink;
     }
 
-    /*public void joinGame(UUID , Player player){
 
-    }*/
 }

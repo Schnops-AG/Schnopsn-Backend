@@ -17,10 +17,13 @@ public enum Call {
         this.value = value;
     }
 
+    // region <getter>
     public String getCallName() {
         return callName;
     }
     public Integer getValue() {
         return value;
     }
+
+    //endregion
 }

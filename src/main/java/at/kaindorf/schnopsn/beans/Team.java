@@ -19,6 +19,8 @@ public class Team {
         this.currentBummerl = currentBummerl;
     }
 
+    // region <getter, setter, toString>
+
     public UUID getTeamid() {
         return teamid;
     }
@@ -60,4 +62,6 @@ public class Team {
                 ", currentBummerl=" + currentBummerl +
                 '}';
     }
+
+    // endregion
 }

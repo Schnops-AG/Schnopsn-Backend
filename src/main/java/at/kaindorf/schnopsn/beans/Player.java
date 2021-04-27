@@ -16,6 +16,8 @@ public class Player {
         this.active = active;
     }
 
+    // region <getter, setter, toString>
+
     public UUID getPlayerid() {
         return playerid;
     }
@@ -57,4 +59,6 @@ public class Player {
                 ", active=" + active +
                 '}';
     }
+
+    // endregion
 }
