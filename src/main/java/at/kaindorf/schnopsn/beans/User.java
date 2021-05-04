@@ -13,8 +13,8 @@ public class User extends Player{
     private String email;
     private Statistic statistic;
 
-    public User(UUID playerid, String playername, boolean caller, boolean active, String password, String email, Statistic statistic) {
-        super(playerid, playername, caller, active);
+    public User(UUID playerid, String playername, boolean caller, boolean active, int playerNumber, String password, String email, Statistic statistic) {
+        super(playerid, playername, caller, active, playerNumber);
         this.password = password;
         this.email = email;
         this.statistic = statistic;

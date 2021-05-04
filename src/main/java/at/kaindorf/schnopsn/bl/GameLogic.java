@@ -44,13 +44,19 @@ public class GameLogic {
     }
 
     public Game createGame(GameType gameType, Player player){
-        Game game = new Game(UUID.randomUUID(),gameType,new ArrayList<>(),null, null);
-        Team team1 = new Team(UUID.randomUUID(),new ArrayList<>(),0,0);
-        Team team2 = new Team(UUID.randomUUID(),new ArrayList<>(),0,0);
-
-        team1.getPlayers().add(player);
-        game.getTeams().add(team1);
-        game.getTeams().add(team2);
+        Game game = null;
+        Team[] teams = new Team[2];
+        for (int i = 0; i < 2; i++) {
+            teams[i]= new Team(0,0);
+        }
+        if(gameType==GameType._2ERSCHNOPSN) {
+            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 2,teams);
+        }
+        else if(gameType==GameType._4ERSCHNOPSN){
+            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 4,teams);
+        }
+        player.setPlayerNumber(1);
+        game.getPlayers().add(player);
         game.setInviteLink(generateInviteLink(game));
         return game;
     }
@@ -82,8 +88,5 @@ public class GameLogic {
             return playerWithHighestAnsage;
     }
 
-    /*public UUID choosePlayerWhoGetsStich(Map<String,String> result,String trumpf){
-
-    }*/
 
 }

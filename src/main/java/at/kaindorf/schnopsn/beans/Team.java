@@ -7,27 +7,15 @@ import java.util.List;
 import java.util.UUID;
 
 public class Team {
-    private UUID teamid;
-    private List<Player> players;
     private int currentScore;
     private int currentBummerl;
 
-    public Team(UUID teamid, List<Player> players, int currentScore, int currentBummerl) {
-        this.teamid = teamid;
-        this.players = players;
+    public Team(int currentScore, int currentBummerl) {
         this.currentScore = currentScore;
         this.currentBummerl = currentBummerl;
     }
 
     // region <getter, setter, toString>
-
-    public UUID getTeamid() {
-        return teamid;
-    }
-
-    public List<Player> getPlayers() {
-        return players;
-    }
 
     public int getCurrentScore() {
         return currentScore;
@@ -35,14 +23,6 @@ public class Team {
 
     public int getCurrentBummerl() {
         return currentBummerl;
-    }
-
-    public void setTeamid(UUID teamid) {
-        this.teamid = teamid;
-    }
-
-    public void setPlayers(List<Player> players) {
-        this.players = players;
     }
 
     public void setCurrentScore(int currentScore) {
@@ -56,8 +36,6 @@ public class Team {
     @Override
     public String toString() {
         return "Team{" +
-                "teamid=" + teamid +
-                ", players=" + players +
                 ", currentScore=" + currentScore +
                 ", currentBummerl=" + currentBummerl +
                 '}';

@@ -1,6 +1,8 @@
 package at.kaindorf.schnopsn.beans;
 
 import lombok.Data;
+
+import java.sql.Array;
 import java.util.UUID;
 
 public class Player {
