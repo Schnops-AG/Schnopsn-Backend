@@ -9,14 +9,14 @@ public class Player {
     private UUID playerid;
     private String playername;
     private boolean caller;
-    private boolean active;
+    private boolean playsCall;
     private int playerNumber;
 
-    public Player(UUID playerid, String playername, boolean caller, boolean active, int playerNumber) {
+    public Player(UUID playerid, String playername, boolean caller, boolean playsCall, int playerNumber) {
         this.playerid = playerid;
         this.playername = playername;
         this.caller = caller;
-        this.active = active;
+        this.playsCall = playsCall;
         this.playerNumber = playerNumber;
     }
     // region <getter, setter, toString>
@@ -44,12 +44,12 @@ public class Player {
         this.caller = caller;
     }
 
-    public boolean isActive() {
-        return active;
+    public boolean isPlaysCall() {
+        return playsCall;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setPlaysCall(boolean active) {
+        this.playsCall = playsCall;
     }
 
     public int getPlayerNumber() {

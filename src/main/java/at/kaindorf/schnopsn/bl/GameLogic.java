@@ -4,10 +4,7 @@ import at.kaindorf.schnopsn.beans.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class GameLogic {
 
@@ -50,10 +47,10 @@ public class GameLogic {
             teams[i]= new Team(0,0);
         }
         if(gameType==GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 2,teams);
+            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 2,teams,Call.NORMAL);
         }
         else if(gameType==GameType._4ERSCHNOPSN){
-            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 4,teams);
+            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 4,teams,Call.NORMAL);
         }
         player.setPlayerNumber(1);
         game.getPlayers().add(player);
@@ -71,21 +68,29 @@ public class GameLogic {
         return inviteLink;
     }
 
+    public static Player findPlayer(List<Player> activePlayers,String playerID){
+        UUID realPlayerID = UUID.fromString(playerID);
+        return activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerID)).findFirst().orElse(null);
+    }
 
+    public static Game findGame(List<Game> activeGames, String gameID){
+        UUID realGameID = UUID.fromString(gameID);
+        return activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null);
+    }
 
-    public UUID choosePlayerWhoMakeHighestCall(Map<String, String> result){
-            UUID playerWithHighestAnsage = null;
-            int highestVal = 0;
-            for (String id : result.keySet()) {
-                //System.out.println(result.get(id));
-                int value=0;
-                    value = Call.valueOf(result.get(id).toUpperCase()).getValue();
-                    if (value > highestVal) {
-                        highestVal = value;
-                        playerWithHighestAnsage = UUID.fromString(id);
-                    }
+    public boolean isCallHigher(Game game, Call call, Player player){
+        Call actualHighestcall = game.getCurrentHighestCall();
+        if(call.getValue() > actualHighestcall.getValue()) {
+            game.setCurrentHighestCall(call);
+            try {
+                game.getPlayers().stream().filter(player1 -> player1.isPlaysCall()).findFirst().get().setPlaysCall(false);
+            } catch(NoSuchElementException e){
+                //noch keiner was angesagt
             }
-            return playerWithHighestAnsage;
+            player.setPlaysCall(true);
+            return true;
+        }
+        return false;
     }
 
 

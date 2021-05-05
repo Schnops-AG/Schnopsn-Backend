@@ -18,8 +18,9 @@ public class Game {
     private Color currentTrump;
     private int maxNumberOfPlayers;
     private Team[] teams;
+    private Call currentHighestCall;
 
-    public Game(UUID gameid, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams) {
+    public Game(UUID gameid, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall) {
         this.gameid = gameid;
         this.gameType = gameType;
         this.players = players;
@@ -27,9 +28,10 @@ public class Game {
         this.currentTrump = currentTrump;
         this.maxNumberOfPlayers = maxNumberOfPlayers;
         this.teams = teams;
+        this.currentHighestCall = currentHighestCall;
     }
 
-// region <getter, setter, toString>
+    // region <getter, setter, toString>
 
     public UUID getGameid() {
         return gameid;
@@ -87,6 +89,14 @@ public class Game {
         this.teams = teams;
     }
 
+    public Call getCurrentHighestCall() {
+        return currentHighestCall;
+    }
+
+    public void setCurrentHighestCall(Call currentHighestCall) {
+        this.currentHighestCall = currentHighestCall;
+    }
+
     @Override
     public String toString() {
         return "Game{" +
@@ -97,6 +107,7 @@ public class Game {
                 ", currentTrump=" + currentTrump +
                 ", maxNumberOfPlayers=" + maxNumberOfPlayers +
                 ", teams=" + Arrays.toString(teams) +
+                ", currentHighestCall=" + currentHighestCall +
                 '}';
     }
 

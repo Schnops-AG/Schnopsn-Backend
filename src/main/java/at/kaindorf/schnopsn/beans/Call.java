@@ -1,7 +1,7 @@
 package at.kaindorf.schnopsn.beans;
 
 public enum Call {
-    NORMAL("Normal",0), BETTLER("Bettler",5),
+    NORMAL("Normal",1), BETTLER("Bettler",5),
     SCHNAPSER("Schnapser",6),ASSENBETTLER("AssenBettler",7),
     PLAUDERER("Plauderer",8),GANG("Gang",9),
     ZEHNERGANG("Zehnergang",10),BAUER("Bauer",12),

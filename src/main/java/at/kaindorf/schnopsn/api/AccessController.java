@@ -19,17 +19,16 @@ public class AccessController {
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestBody String playerName){
-        Player newPlayer = new Player(UUID.randomUUID(),playerName,false,true,0);
+        Player newPlayer = new Player(UUID.randomUUID(),playerName,false,false,0);
         activePlayers.add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
 
     @PostMapping(path = "/createGame")
     public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerid){
-        UUID realPlayerid = UUID.fromString(playerid);
         GameType realGameType = GameType.valueOf(gameType);
 
-        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerid)).findFirst().orElse(null);
+        Player player = GameLogic.findPlayer(activePlayers,playerid);
         player.setCaller(true);
         Game newGame = logic.createGame(realGameType,player);
         activeGames.add(newGame);
@@ -38,18 +37,17 @@ public class AccessController {
 
     @PostMapping(path = "/joinGame")
     public Object joinGame(@RequestParam("gameID") String gameID,@RequestParam("playerID") String playerID) {
-        UUID realGameID = UUID.fromString(gameID);
-        UUID realPlayerID = UUID.fromString(playerID);
-        Player player = activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerID)).findFirst().orElse(null);
-        Game game = activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null);
+        Player player = GameLogic.findPlayer(activePlayers, playerID);
+        Game game = GameLogic.findGame(activeGames, gameID);
 
         if(game.getPlayers().size() < game.getMaxNumberOfPlayers()){
             player.setPlayerNumber(game.getPlayers().size() + 1);
             game.getPlayers().add(player);
         }
+
         System.out.println(game);
-        activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
-        return ResponseEntity.status(200).body(game);
+        //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
+        return ResponseEntity.status(200).body(GameLogic.findGame(activeGames, gameID));
     }
 
     @PostMapping(path = "/startRound")
@@ -61,21 +59,14 @@ public class AccessController {
         //neuen Caller definieren
         int oldCallerNumber = activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).getPlayerNumber();
         activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).setCaller(false);
-        activeGames.stream().filter(game -> game.getGameid().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.getPlayerNumber() == oldCallerNumber%4+1).findFirst().orElse(null).setCaller(true);
+        activeGames.stream().filter(game -> game.getGameid().equals(realGameID)).findFirst().flatMap(game -> game.getPlayers().stream().filter(player -> player.getPlayerNumber() == oldCallerNumber%4+1).findFirst()).ifPresent(player -> player.setCaller(true));
 
         return ResponseEntity.status(200).body("success");
     }
 
     @PostMapping(path = "/makeCall")
-    public Object makeCall(@RequestBody String jsonMap) {
-        try {
-            Map<String,String> result = new ObjectMapper().readValue(jsonMap, LinkedHashMap.class);
-            return ResponseEntity.status(200).body(logic.choosePlayerWhoMakeHighestCall(result));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+    public Object makeCall(@RequestParam("gameID") String gameID,@RequestParam("playerID") String playerID,@RequestParam("call") String call) {
+        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(activeGames, gameID), Call.valueOf(call), GameLogic.findPlayer(activePlayers,playerID)));
     }
 
     @PostMapping(path = "/makeMoveByCall")
