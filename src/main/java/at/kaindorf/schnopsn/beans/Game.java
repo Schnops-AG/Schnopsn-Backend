@@ -5,10 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class Game {
     private UUID gameid;
@@ -19,8 +16,9 @@ public class Game {
     private int maxNumberOfPlayers;
     private Team[] teams;
     private Call currentHighestCall;
+    private Map<Player,Card> playedCards;
 
-    public Game(UUID gameid, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall) {
+    public Game(UUID gameid, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall, Map<Player, Card> playedCards) {
         this.gameid = gameid;
         this.gameType = gameType;
         this.players = players;
@@ -29,9 +27,10 @@ public class Game {
         this.maxNumberOfPlayers = maxNumberOfPlayers;
         this.teams = teams;
         this.currentHighestCall = currentHighestCall;
+        this.playedCards = playedCards;
     }
 
-    // region <getter, setter, toString>
+// region <getter, setter, toString>
 
     public UUID getGameid() {
         return gameid;
@@ -97,6 +96,14 @@ public class Game {
         this.currentHighestCall = currentHighestCall;
     }
 
+    public Map<Player, Card> getPlayedCards() {
+        return playedCards;
+    }
+
+    public void setPlayedCards(Map<Player, Card> playedCards) {
+        this.playedCards = playedCards;
+    }
+
     @Override
     public String toString() {
         return "Game{" +
@@ -108,6 +115,7 @@ public class Game {
                 ", maxNumberOfPlayers=" + maxNumberOfPlayers +
                 ", teams=" + Arrays.toString(teams) +
                 ", currentHighestCall=" + currentHighestCall +
+                ", playedCards=" + playedCards +
                 '}';
     }
 
