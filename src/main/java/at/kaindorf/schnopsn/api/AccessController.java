@@ -57,13 +57,13 @@ public class AccessController {
     public Object startRound(@RequestParam("gameID") String gameID, @RequestParam("color") String color) {
         UUID realGameID = UUID.fromString(gameID);
         Color realColor = Color.valueOf(color);
-        activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null).setCurrentTrump(realColor);
+        activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).setCurrentTrump(realColor);
 
         //neuen Caller definieren
         //Wenn 4erschnopsn dann caller sonst ned
-        int oldCallerNumber = activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).getPlayerNumber();
-        activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).setCaller(false);
-        activeGames.stream().filter(game -> game.getGameid().equals(realGameID)).findFirst().flatMap(game -> game.getPlayers().stream().filter(player -> player.getPlayerNumber() == oldCallerNumber % 4 + 1).findFirst()).ifPresent(player -> player.setCaller(true));
+        int oldCallerNumber = activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).getPlayerNumber();
+        activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).setCaller(false);
+        activeGames.stream().filter(game -> game.getGameID().equals(realGameID)).findFirst().flatMap(game -> game.getPlayers().stream().filter(player -> player.getPlayerNumber() == oldCallerNumber % 4 + 1).findFirst()).ifPresent(player -> player.setCaller(true));
 
         return ResponseEntity.status(200).body("started round successfully");
     }
@@ -81,7 +81,7 @@ public class AccessController {
 
         switch (game.getCurrentHighestCall()) {
             case BETTLER, ASSENBETTLER, PLAUDERER:
-                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() - 1 && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerid() == player.getPlayerid()).findFirst().orElse(null) == null) {
+                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() - 1 && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
@@ -95,7 +95,7 @@ public class AccessController {
                 break;
 
             default:
-                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerid() == player.getPlayerid()).findFirst().orElse(null) == null) {
+                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {

@@ -6,34 +6,36 @@ import java.sql.Array;
 import java.util.UUID;
 
 public class Player {
-    private UUID playerid;
-    private String playername;
+    private UUID playerID;
+    private String playerName;
     private boolean caller;
     private boolean playsCall;
     private int playerNumber;
 
-    public Player(UUID playerid, String playername, boolean caller, boolean playsCall, int playerNumber) {
-        this.playerid = playerid;
-        this.playername = playername;
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber) {
+        this.playerID = playerID;
+        this.playerName = playerName;
         this.caller = caller;
         this.playsCall = playsCall;
         this.playerNumber = playerNumber;
     }
     // region <getter, setter, toString>
-    public UUID getPlayerid() {
-        return playerid;
+
+
+    public UUID getPlayerID() {
+        return playerID;
     }
 
-    public void setPlayerid(UUID playerid) {
-        this.playerid = playerid;
+    public void setPlayerID(UUID playerID) {
+        this.playerID = playerID;
     }
 
-    public String getPlayername() {
-        return playername;
+    public String getPlayerName() {
+        return playerName;
     }
 
-    public void setPlayername(String playername) {
-        this.playername = playername;
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
     }
 
     public boolean isCaller() {

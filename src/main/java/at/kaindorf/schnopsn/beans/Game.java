@@ -8,7 +8,7 @@ import java.net.URL;
 import java.util.*;
 
 public class Game {
-    private UUID gameid;
+    private UUID gameID;
     private GameType gameType;
     private List<Player> players;
     private URL inviteLink;
@@ -18,8 +18,8 @@ public class Game {
     private Call currentHighestCall;
     private Map<Player,Card> playedCards;
 
-    public Game(UUID gameid, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall, Map<Player, Card> playedCards) {
-        this.gameid = gameid;
+    public Game(UUID gameID, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall, Map<Player, Card> playedCards) {
+        this.gameID = gameID;
         this.gameType = gameType;
         this.players = players;
         this.inviteLink = inviteLink;
@@ -32,12 +32,13 @@ public class Game {
 
 // region <getter, setter, toString>
 
-    public UUID getGameid() {
-        return gameid;
+
+    public UUID getGameID() {
+        return gameID;
     }
 
-    public void setGameid(UUID gameid) {
-        this.gameid = gameid;
+    public void setGameID(UUID gameID) {
+        this.gameID = gameID;
     }
 
     public GameType getGameType() {
@@ -107,7 +108,7 @@ public class Game {
     @Override
     public String toString() {
         return "Game{" +
-                "gameid=" + gameid +
+                "gameid=" + gameID +
                 ", gameType=" + gameType +
                 ", players=" + players +
                 ", inviteLink=" + inviteLink +
