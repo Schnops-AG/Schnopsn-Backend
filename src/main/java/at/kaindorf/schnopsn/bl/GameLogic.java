@@ -60,7 +60,7 @@ public class GameLogic {
     public URL generateInviteLink(Game game) {
         URL inviteLink;
         try {
-            inviteLink = new URL("http://localhost:8080/" + game.getGameid());
+            inviteLink = new URL("http://localhost:8080/" + game.getGameID());
         } catch (MalformedURLException e) {
             return null;
         }
@@ -69,12 +69,12 @@ public class GameLogic {
 
     public static Player findPlayer(List<Player> activePlayers, String playerID) {
         UUID realPlayerID = UUID.fromString(playerID);
-        return activePlayers.stream().filter(player1 -> player1.getPlayerid().equals(realPlayerID)).findFirst().orElse(null);
+        return activePlayers.stream().filter(player1 -> player1.getPlayerID().equals(realPlayerID)).findFirst().orElse(null);
     }
 
     public static Game findGame(List<Game> activeGames, String gameID) {
         UUID realGameID = UUID.fromString(gameID);
-        return activeGames.stream().filter(game1 -> game1.getGameid().equals(realGameID)).findFirst().orElse(null);
+        return activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null);
     }
 
     public Card getCard(String color, int value) {
@@ -128,7 +128,7 @@ public class GameLogic {
 
         for (Player player : playMap.keySet()) {
             if (playMap.get(player) == playCards.get(0)) {
-                return player.getPlayerid();
+                return player.getPlayerID();
             }
         }
         return null;
