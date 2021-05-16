@@ -60,7 +60,7 @@ public class GameLogic {
     public URL generateInviteLink(Game game) {
         URL inviteLink;
         try {
-            inviteLink = new URL("http://localhost:8080/" + game.getGameID());
+            inviteLink = new URL("http://localhost:3000/" + game.getGameID());
         } catch (MalformedURLException e) {
             return null;
         }
