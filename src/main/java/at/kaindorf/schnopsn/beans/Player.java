@@ -11,16 +11,19 @@ public class Player {
     private boolean caller;
     private boolean playsCall;
     private int playerNumber;
+    private boolean admin;
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber) {
+
+    // region <getter, setter, toString>
+
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
         this.playsCall = playsCall;
         this.playerNumber = playerNumber;
+        this.admin = admin;
     }
-    // region <getter, setter, toString>
-
 
     public UUID getPlayerID() {
         return playerID;
@@ -50,7 +53,7 @@ public class Player {
         return playsCall;
     }
 
-    public void setPlaysCall(boolean active) {
+    public void setPlaysCall(boolean playsCall) {
         this.playsCall = playsCall;
     }
 
@@ -62,5 +65,12 @@ public class Player {
         this.playerNumber = playerNumber;
     }
 
-    // endregion
+    public boolean isAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.admin = admin;
+    }
+// endregion
 }

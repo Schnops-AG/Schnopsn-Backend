@@ -21,42 +21,54 @@ public class AccessController {
     private List<Player> activePlayers = new ArrayList<>();
 
     @PostMapping(path = "/createPlayer")
-    public Object createUser(@RequestBody String playerName) {
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0);
+    public Object createUser(@RequestParam("playerName") String playerName) {
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0,false);
         activePlayers.add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
 
     @PostMapping(path = "/createGame")
     public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerid) {
-        GameType realGameType = GameType.valueOf(gameType);
-
-        Player player = GameLogic.findPlayer(activePlayers, playerid);
-        player.setCaller(true);
-        Game newGame = logic.createGame(realGameType, player);
-        activeGames.add(newGame);
-        return ResponseEntity.status(200).body(newGame);
+        try {
+            GameType realGameType = GameType.valueOf(gameType);
+            Player player = GameLogic.findPlayer(activePlayers, playerid);
+            player.setCaller(true);
+            player.setAdmin(true);
+            Game newGame = logic.createGame(realGameType, player);
+            activeGames.add(newGame);
+            return ResponseEntity.status(200).body(newGame);
+        }
+        catch(NullPointerException e){
+            //kein Spieler gefunden
+            return ResponseEntity.status(400).body("Player does not exist!");
+        }
     }
 
     @PostMapping(path = "/joinGame")
     public Object joinGame(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
-        Player player = GameLogic.findPlayer(activePlayers, playerID);
-        Game game = GameLogic.findGame(activeGames, gameID);
+        try {
+            Player player = GameLogic.findPlayer(activePlayers, playerID);
+            Game game = GameLogic.findGame(activeGames, gameID);
 
-        if (game.getPlayers().size() < game.getMaxNumberOfPlayers()) {
-            player.setPlayerNumber(game.getPlayers().size() + 1);
-            game.getPlayers().add(player);
+            if (game.getPlayers().size() < game.getMaxNumberOfPlayers()) {
+                player.setPlayerNumber(game.getPlayers().size() + 1);
+                game.getPlayers().add(player);
+            }
+
+            System.out.println(game);
+            //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
+            return ResponseEntity.status(200).body(GameLogic.findGame(activeGames, gameID));
         }
-
-        System.out.println(game);
-        //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
-        return ResponseEntity.status(200).body(GameLogic.findGame(activeGames, gameID));
+        catch(NullPointerException e){
+            //game nicht da
+            return ResponseEntity.status(400).body("Game does not exist!");
+        }
     }
 
     @PostMapping(path = "/startRound")
     public Object startRound(@RequestParam("gameID") String gameID, @RequestParam("color") String color) {
         UUID realGameID = UUID.fromString(gameID);
-        Color realColor = Color.valueOf(color);
+        Color realColor = Color.valueOf(color.toUpperCase());
         activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).setCurrentTrump(realColor);
 
         //neuen Caller definieren
@@ -70,7 +82,7 @@ public class AccessController {
 
     @PostMapping(path = "/makeCall")
     public Object makeCall(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("call") String call) {
-        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(activeGames, gameID), Call.valueOf(call), GameLogic.findPlayer(activePlayers, playerID)));
+        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(activeGames, gameID), Call.valueOf(call.toUpperCase()), GameLogic.findPlayer(activePlayers, playerID)));
     }
 
     @PostMapping(path = "/makeMoveByCall")
@@ -85,7 +97,7 @@ public class AccessController {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
-                    if(trumpNeeded(game.getCurrentHighestCall())){
+                    if(logic.trumpNeeded(game.getCurrentHighestCall())){
                         return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump()));
                     }
                     else {
@@ -99,7 +111,7 @@ public class AccessController {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
-                    if(trumpNeeded(game.getCurrentHighestCall())){
+                    if(logic.trumpNeeded(game.getCurrentHighestCall())){
                         return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump()));
                     }
                     else {
@@ -112,12 +124,5 @@ public class AccessController {
         return ResponseEntity.status(200).body("valid move but not all players have played yet");
     }
 
-    public boolean trumpNeeded(Call call){
-        switch(call){
-            case BETTLER,ASSENBETTLER,PLAUDERER,GANG,ZEHNERGANG:
-                return false;
-            default:
-                return true;
-        }
-    }
+
 }

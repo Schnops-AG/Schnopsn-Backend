@@ -99,6 +99,7 @@ public class GameLogic {
 
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump) {
         List<Card> playCards = new ArrayList<>();
+        
         for (Player player : playMap.keySet()) {
             playCards.add(playMap.get(player));
         }
@@ -133,6 +134,13 @@ public class GameLogic {
         }
         return null;
     }
-
+    public boolean trumpNeeded(Call call){
+        switch(call){
+            case BETTLER,ASSENBETTLER,PLAUDERER,GANG,ZEHNERGANG:
+                return false;
+            default:
+                return true;
+        }
+    }
 
 }
