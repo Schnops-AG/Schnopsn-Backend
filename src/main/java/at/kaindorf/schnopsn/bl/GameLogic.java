@@ -88,7 +88,7 @@ public class GameLogic {
         if (call.getValue() > actualHighestcall.getValue()) {
             game.setCurrentHighestCall(call);
             try {
-                game.getPlayers().stream().filter(player1 -> player1.isPlaysCall()).findFirst().get().setPlaysCall(false);
+                game.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get().setPlaysCall(false);
             } catch (NoSuchElementException e) {
                 //noch keiner was angesagt
             }
@@ -133,7 +133,7 @@ public class GameLogic {
 
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump) {
         List<Card> playCards = new ArrayList<>();
-        
+
         for (Player player : playMap.keySet()) {
             playCards.add(playMap.get(player));
         }
@@ -169,11 +169,23 @@ public class GameLogic {
         return null;
     }
     public boolean trumpNeeded(Call call){
-        switch(call){
-            case BETTLER,ASSENBETTLER,PLAUDERER,GANG,ZEHNERGANG:
-                return false;
-            default:
-                return true;
+        return switch (call) {
+            case BETTLER, ASSENBETTLER, PLAUDERER, GANG, ZEHNERGANG -> false;
+            default -> true;
+        };
+    }
+
+    public void awardForPoints(Player winner, String callName, Game game){
+        Call call = Call.valueOf(callName.toUpperCase());
+        int currentScore = 0;
+        if (winner.getPlayerNumber() % 2 != 0){
+           currentScore = game.getTeams()[0].getCurrentScore();
+           currentScore += call.getValue();
+           game.getTeams()[0].setCurrentScore(currentScore);
+        } else {
+            currentScore = game.getTeams()[1].getCurrentScore();
+            currentScore += call.getValue();
+            game.getTeams()[1].setCurrentScore(currentScore);
         }
     }
 

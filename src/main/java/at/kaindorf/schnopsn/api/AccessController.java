@@ -2,14 +2,11 @@ package at.kaindorf.schnopsn.api;
 
 import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
-import static at.kaindorf.schnopsn.beans.Call.BETTLER;
 
 @RestController
 @RequestMapping("api/v1")
@@ -17,8 +14,8 @@ import static at.kaindorf.schnopsn.beans.Call.BETTLER;
 public class AccessController {
 
     private final GameLogic logic = new GameLogic();
-    private List<Game> activeGames = new ArrayList<>();
-    private List<Player> activePlayers = new ArrayList<>();
+    private final List<Game> activeGames = new ArrayList<>();
+    private final List<Player> activePlayers = new ArrayList<>();
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -28,10 +25,10 @@ public class AccessController {
     }
 
     @PostMapping(path = "/createGame")
-    public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerid) {
+    public Object createGame(@RequestParam("gameType") String gameType, @RequestParam("playerID") String playerID) {
         try {
             GameType realGameType = GameType.valueOf(gameType);
-            Player player = GameLogic.findPlayer(activePlayers, playerid);
+            Player player = GameLogic.findPlayer(activePlayers, playerID);
             player.setCaller(true);
             player.setAdmin(true);
             Game newGame = logic.createGame(realGameType, player);
@@ -71,8 +68,8 @@ public class AccessController {
 
         //neuen Caller definieren
         //Wenn 4erschnopsn dann caller sonst ned
-        int oldCallerNumber = activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).getPlayerNumber();
-        activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(player -> player.isCaller()).findFirst().orElse(null).setCaller(false);
+        int oldCallerNumber = activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(Player::isCaller).findFirst().orElse(null).getPlayerNumber();
+        activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null).getPlayers().stream().filter(Player::isCaller).findFirst().orElse(null).setCaller(false);
         activeGames.stream().filter(game -> game.getGameID().equals(realGameID)).findFirst().flatMap(game -> game.getPlayers().stream().filter(player -> player.getPlayerNumber() == oldCallerNumber % 4 + 1).findFirst()).ifPresent(player -> player.setCaller(true));
 
         return ResponseEntity.status(200).body("started round successfully");
