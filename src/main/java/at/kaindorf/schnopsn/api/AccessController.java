@@ -22,7 +22,7 @@ public class AccessController {
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0,false);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false);
         activePlayers.add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -37,8 +37,7 @@ public class AccessController {
             Game newGame = logic.createGame(realGameType, player);
             activeGames.add(newGame);
             return ResponseEntity.status(200).body(newGame);
-        }
-        catch(NullPointerException e){
+        } catch (NullPointerException e) {
             //kein Spieler gefunden
             return ResponseEntity.status(400).body("Player does not exist!");
         }
@@ -58,8 +57,7 @@ public class AccessController {
             System.out.println(game);
             //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
             return ResponseEntity.status(200).body(GameLogic.findGame(activeGames, gameID));
-        }
-        catch(NullPointerException e){
+        } catch (NullPointerException e) {
             //game nicht da
             return ResponseEntity.status(400).body("Game does not exist!");
         }
@@ -90,38 +88,12 @@ public class AccessController {
         Game game = GameLogic.findGame(activeGames, gameID);
         Player player = GameLogic.findPlayer(activePlayers, playerID);
         Card card = logic.getCard(color, cardValue);
-
-        switch (game.getCurrentHighestCall()) {
-            case BETTLER, ASSENBETTLER, PLAUDERER:
-                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() - 1 && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
-                    game.getPlayedCards().put(player, card);
-                }
-                if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
-                    if(logic.trumpNeeded(game.getCurrentHighestCall())){
-                        return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump()));
-                    }
-                    else {
-                        return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), null));
-                    }
-                }
-                break;
-
-            default:
-                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
-                    game.getPlayedCards().put(player, card);
-                }
-                if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
-                    if(logic.trumpNeeded(game.getCurrentHighestCall())){
-                        return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump()));
-                    }
-                    else {
-                        return ResponseEntity.status(200).body(logic.getPlayerWithHighestCard(game.getPlayedCards(), null));
-                    }
-                }
-                break;
+        UUID winner = logic.makeRightMove(game, card, player);
+        if (winner == null) {
+            return ResponseEntity.status(200).body("valid move but not all players have played yet");
+        } else {
+            return ResponseEntity.status(200).body(winner);
         }
-
-        return ResponseEntity.status(200).body("valid move but not all players have played yet");
     }
 
 

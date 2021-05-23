@@ -1,6 +1,7 @@
 package at.kaindorf.schnopsn.bl;
 
 import at.kaindorf.schnopsn.beans.*;
+import org.springframework.http.ResponseEntity;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -95,6 +96,39 @@ public class GameLogic {
             return true;
         }
         return false;
+    }
+
+    public UUID makeRightMove(Game game, Card card, Player player) {
+        switch (game.getCurrentHighestCall()) {
+            case BETTLER, ASSENBETTLER, PLAUDERER:
+                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() - 1 && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
+                    game.getPlayedCards().put(player, card);
+                }
+                if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
+                    if(trumpNeeded(game.getCurrentHighestCall())){
+                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump());
+                    }
+                    else {
+                        return getPlayerWithHighestCard(game.getPlayedCards(), null);
+                    }
+                }
+                break;
+
+            default:
+                if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
+                    game.getPlayedCards().put(player, card);
+                }
+                if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
+                    if(trumpNeeded(game.getCurrentHighestCall())){
+                        getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump());
+                    }
+                    else {
+                        return getPlayerWithHighestCard(game.getPlayedCards(), null);
+                    }
+                }
+                break;
+        }
+        return null;
     }
 
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump) {
