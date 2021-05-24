@@ -1,6 +1,7 @@
 package at.kaindorf.schnopsn.beans;
 
 import lombok.Data;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.sql.Array;
 import java.util.UUID;
@@ -12,7 +13,20 @@ public class Player {
     private boolean playsCall;
     private int playerNumber;
     private boolean admin;
+    private WebSocketSession session;
 
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, WebSocketSession session) {
+        this.playerID = playerID;
+        this.playerName = playerName;
+        this.caller = caller;
+        this.playsCall = playsCall;
+        this.playerNumber = playerNumber;
+        this.admin = admin;
+        this.session = session;
+    }
+
+    public Player() {
+    }
 
     // region <getter, setter, toString>
 
@@ -23,6 +37,19 @@ public class Player {
         this.playsCall = playsCall;
         this.playerNumber = playerNumber;
         this.admin = admin;
+    }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "playerID=" + playerID +
+                ", playerName='" + playerName + '\'' +
+                ", caller=" + caller +
+                ", playsCall=" + playsCall +
+                ", playerNumber=" + playerNumber +
+                ", admin=" + admin +
+                ", session=" + session +
+                '}';
     }
 
     public UUID getPlayerID() {
@@ -72,5 +99,42 @@ public class Player {
     public void setAdmin(boolean admin) {
         this.admin = admin;
     }
-// endregion
+
+    public WebSocketSession getSession() {
+        return session;
+    }
+
+    public void setSession(WebSocketSession session) {
+        this.session = session;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Player player = (Player) o;
+
+        if (caller != player.caller) return false;
+        if (playsCall != player.playsCall) return false;
+        if (playerNumber != player.playerNumber) return false;
+        if (admin != player.admin) return false;
+        if (playerID != null ? !playerID.equals(player.playerID) : player.playerID != null) return false;
+        if (playerName != null ? !playerName.equals(player.playerName) : player.playerName != null) return false;
+        return session != null ? session.equals(player.session) : player.session == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = playerID != null ? playerID.hashCode() : 0;
+        result = 31 * result + (playerName != null ? playerName.hashCode() : 0);
+        result = 31 * result + (caller ? 1 : 0);
+        result = 31 * result + (playsCall ? 1 : 0);
+        result = 31 * result + playerNumber;
+        result = 31 * result + (admin ? 1 : 0);
+        result = 31 * result + (session != null ? session.hashCode() : 0);
+        return result;
+    }
+
+    // endregion
 }

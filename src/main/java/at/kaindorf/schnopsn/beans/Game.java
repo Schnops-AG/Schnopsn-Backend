@@ -10,18 +10,16 @@ import java.util.*;
 public class Game {
     private UUID gameID;
     private GameType gameType;
-    private List<Player> players;
     private URL inviteLink;
     private Color currentTrump;
     private int maxNumberOfPlayers;
-    private Team[] teams;
+    private List<Team> teams;
     private Call currentHighestCall;
     private Map<Player,Card> playedCards;
 
-    public Game(UUID gameID, GameType gameType, List<Player> players, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, Team[] teams, Call currentHighestCall, Map<Player, Card> playedCards) {
+    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards) {
         this.gameID = gameID;
         this.gameType = gameType;
-        this.players = players;
         this.inviteLink = inviteLink;
         this.currentTrump = currentTrump;
         this.maxNumberOfPlayers = maxNumberOfPlayers;
@@ -30,8 +28,10 @@ public class Game {
         this.playedCards = playedCards;
     }
 
-// region <getter, setter, toString>
+    public Game() {
+    }
 
+    // region <getter, setter, toString>
 
     public UUID getGameID() {
         return gameID;
@@ -47,14 +47,6 @@ public class Game {
 
     public void setGameType(GameType gameType) {
         this.gameType = gameType;
-    }
-
-    public List<Player> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(List<Player> players) {
-        this.players = players;
     }
 
     public URL getInviteLink() {
@@ -81,11 +73,11 @@ public class Game {
         this.maxNumberOfPlayers = maxNumberOfPlayers;
     }
 
-    public Team[] getTeams() {
+    public List<Team> getTeams() {
         return teams;
     }
 
-    public void setTeams(Team[] teams) {
+    public void setTeams(List<Team> teams) {
         this.teams = teams;
     }
 
@@ -108,17 +100,46 @@ public class Game {
     @Override
     public String toString() {
         return "Game{" +
-                "gameid=" + gameID +
+                "gameID=" + gameID +
                 ", gameType=" + gameType +
-                ", players=" + players +
                 ", inviteLink=" + inviteLink +
                 ", currentTrump=" + currentTrump +
                 ", maxNumberOfPlayers=" + maxNumberOfPlayers +
-                ", teams=" + Arrays.toString(teams) +
+                ", teams=" + teams +
                 ", currentHighestCall=" + currentHighestCall +
                 ", playedCards=" + playedCards +
                 '}';
     }
 
-//endregion
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Game game = (Game) o;
+
+        if (maxNumberOfPlayers != game.maxNumberOfPlayers) return false;
+        if (gameID != null ? !gameID.equals(game.gameID) : game.gameID != null) return false;
+        if (gameType != game.gameType) return false;
+        if (inviteLink != null ? !inviteLink.equals(game.inviteLink) : game.inviteLink != null) return false;
+        if (currentTrump != game.currentTrump) return false;
+        if (teams != null ? !teams.equals(game.teams) : game.teams != null) return false;
+        if (currentHighestCall != game.currentHighestCall) return false;
+        return playedCards != null ? playedCards.equals(game.playedCards) : game.playedCards == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = gameID != null ? gameID.hashCode() : 0;
+        result = 31 * result + (gameType != null ? gameType.hashCode() : 0);
+        result = 31 * result + (inviteLink != null ? inviteLink.hashCode() : 0);
+        result = 31 * result + (currentTrump != null ? currentTrump.hashCode() : 0);
+        result = 31 * result + maxNumberOfPlayers;
+        result = 31 * result + (teams != null ? teams.hashCode() : 0);
+        result = 31 * result + (currentHighestCall != null ? currentHighestCall.hashCode() : 0);
+        result = 31 * result + (playedCards != null ? playedCards.hashCode() : 0);
+        return result;
+    }
+
+    //endregion
 }

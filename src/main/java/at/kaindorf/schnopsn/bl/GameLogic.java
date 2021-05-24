@@ -43,17 +43,18 @@ public class GameLogic {
 
     public Game createGame(GameType gameType, Player player) {
         Game game = null;
-        Team[] teams = new Team[2];
-        for (int i = 0; i < 2; i++) {
-            teams[i] = new Team(0, 0);
-        }
+        List<Player> players = new ArrayList<>();
+        players.add(player);
+        List<Team> teams = new ArrayList<>();
+        teams.add(new Team(0,0,players));
+        teams.add(new Team(0,0,new ArrayList<>()));
+
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
+            game = new Game(UUID.randomUUID(), gameType,  null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, new ArrayList<>(), null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
         }
         player.setPlayerNumber(1);
-        game.getPlayers().add(player);
         game.setInviteLink(generateInviteLink(game));
         return game;
     }
@@ -68,7 +69,7 @@ public class GameLogic {
         return inviteLink;
     }
 
-    public static Player findPlayer(List<Player> activePlayers, String playerID) {
+    public static Player findPlayer(List<Player> activePlayers, String playerID) throws IllegalArgumentException {
         UUID realPlayerID = UUID.fromString(playerID);
         return activePlayers.stream().filter(player1 -> player1.getPlayerID().equals(realPlayerID)).findFirst().orElse(null);
     }
@@ -78,17 +79,25 @@ public class GameLogic {
         return activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null);
     }
 
+    public static int getCurrentNumberOfPlayers(Game game){
+
+        return game.getTeams().get(0).getPlayers().size()+game.getTeams().get(1).getPlayers().size();
+    }
+
     public Card getCard(String color, int value) {
         Color realColor = Color.valueOf(color.toUpperCase());
         return allCards.stream().filter(card -> card.getColor().equals(realColor) && card.getValue() == value).findFirst().get();
     }
 
     public boolean isCallHigher(Game game, Call call, Player player) {
-        Call actualHighestcall = game.getCurrentHighestCall();
-        if (call.getValue() > actualHighestcall.getValue()) {
+        Call currentHighestCall = game.getCurrentHighestCall();
+        if (call.getValue() > currentHighestCall.getValue()) {
             game.setCurrentHighestCall(call);
             try {
-                game.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get().setPlaysCall(false);
+                for (Team team:game.getTeams()) {
+                    team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get().setPlaysCall(false);
+                }
+
             } catch (NoSuchElementException e) {
                 //noch keiner was angesagt
             }
@@ -179,13 +188,13 @@ public class GameLogic {
         Call call = Call.valueOf(callName.toUpperCase());
         int currentScore = 0;
         if (winner.getPlayerNumber() % 2 != 0){
-           currentScore = game.getTeams()[0].getCurrentScore();
+           currentScore = game.getTeams().get(0).getCurrentScore();
            currentScore += call.getValue();
-           game.getTeams()[0].setCurrentScore(currentScore);
+           game.getTeams().get(0).setCurrentScore(currentScore);
         } else {
-            currentScore = game.getTeams()[1].getCurrentScore();
+            currentScore = game.getTeams().get(1).getCurrentScore();
             currentScore += call.getValue();
-            game.getTeams()[1].setCurrentScore(currentScore);
+            game.getTeams().get(1).setCurrentScore(currentScore);
         }
     }
 
