@@ -14,8 +14,9 @@ import java.util.*;
 public class AccessController {
 
     private final GameLogic logic = new GameLogic();
-    private final List<Game> activeGames = new ArrayList<>();
-    private final List<Player> activePlayers = new ArrayList<>();
+    /*private final List<Game> activeGames = new ArrayList<>();
+    private final List<Player> activePlayers = new ArrayList<>();*/
+    private GameStorage storage = GameStorage.getInstance();
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -24,9 +25,8 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body("Empty or invalid playerName");
         }
-
         Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, null);
-        activePlayers.add(newPlayer);
+        storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
 
@@ -46,11 +46,11 @@ public class AccessController {
 
         try {
             GameType realGameType = GameType.valueOf(gameType);
-            Player player = GameLogic.findPlayer(activePlayers, playerID);
+            Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             player.setCaller(true);
             player.setAdmin(true);
             Game newGame = logic.createGame(realGameType, player);
-            activeGames.add(newGame);
+            storage.getActiveGames().add(newGame);
             return ResponseEntity.status(200).body(newGame);
         } catch (NullPointerException e) {
             return ResponseEntity.status(400).body("Player does not exist!"); // no player found
@@ -73,8 +73,8 @@ public class AccessController {
         }
 
         try {
-            Player player = GameLogic.findPlayer(activePlayers, playerID);
-            Game game = GameLogic.findGame(activeGames, gameID);
+            Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+            Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
             int numberOfPlayers = GameLogic.getCurrentNumberOfPlayers(game);
             if (numberOfPlayers < game.getMaxNumberOfPlayers()) {
                 player.setPlayerNumber(numberOfPlayers + 1);
@@ -87,7 +87,7 @@ public class AccessController {
 
             System.out.println(game);
             //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
-            return ResponseEntity.status(200).body(GameLogic.findGame(activeGames, gameID));
+            return ResponseEntity.status(200).body(GameLogic.findGame(storage.getActiveGames(), gameID));
 
         } catch (NullPointerException e) {
             return ResponseEntity.status(400).body("Player or Game does not exist!"); // no player|game found
@@ -121,7 +121,7 @@ public class AccessController {
 
         //neuen Caller definieren
         //Wenn 4erschnopsn dann caller sonst ned
-        Game game = GameLogic.findGame(activeGames, gameID);
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setCurrentTrump(realColor);
         int oldCallerNumber = 0;
         for (Team team : game.getTeams()) {
@@ -160,12 +160,12 @@ public class AccessController {
             return ResponseEntity.status(400).body("Invalid call!");
         }
 
-        Player player = GameLogic.findPlayer(activePlayers, playerID);
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
         if (player == null) {
             return ResponseEntity.status(404).body("No player found");
         }
 
-        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(activeGames, gameID), validCall, player));
+        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(storage.getActiveGames(), gameID), validCall, player));
     }
 
     @PostMapping(path = "/makeMoveByCall")
@@ -186,14 +186,16 @@ public class AccessController {
         }
 
         try {
-            Game game = GameLogic.findGame(activeGames, gameID);
-            Player player = GameLogic.findPlayer(activePlayers, playerID);
+            Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+            Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             Card card = logic.getCard(color, cardValue);
-            UUID winner = logic.makeRightMove(game, card, player);
-            if (winner == null) {
+            UUID winnerID = logic.makeRightMove(game, card, player);
+            if (winnerID == null) {
                 return ResponseEntity.status(200).body("valid move but not all players have played yet");
             } else {
-                return ResponseEntity.status(200).body(winner);
+                Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
+                logic.awardForPoints(winner, game);
+                return ResponseEntity.status(200).body(winner.getPlayerName());
             }
 
         } catch (IllegalArgumentException e) {

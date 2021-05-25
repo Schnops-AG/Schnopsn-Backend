@@ -1,5 +1,8 @@
 package at.kaindorf.schnopsn.websocket;
 
+import at.kaindorf.schnopsn.api.GameStorage;
+import at.kaindorf.schnopsn.beans.Player;
+import at.kaindorf.schnopsn.bl.GameLogic;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -12,15 +15,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Component
 public class SocketHandler extends TextWebSocketHandler {
     List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
+    private GameStorage storage = GameStorage.getInstance();
 
     /**
      * handler for all INCOMING messages
      */
     @Override
-    public void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
+    public void handleTextMessage(WebSocketSession session, TextMessage uuid) throws IOException {
 
-        System.out.println(message);
-        System.out.println(message.getPayload());
+        /*System.out.println(message);
+        System.out.println(message.getPayload());*/
+        GameLogic.findPlayer(storage.getActivePlayers(),uuid.toString()).setSession(session);
+
         session.sendMessage(new TextMessage("a response")); // send Message to client
     }
 

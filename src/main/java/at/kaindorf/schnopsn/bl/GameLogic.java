@@ -184,8 +184,8 @@ public class GameLogic {
         };
     }
 
-    public void awardForPoints(Player winner, String callName, Game game){
-        Call call = Call.valueOf(callName.toUpperCase());
+    public void awardForPoints(Player winner, Game game){
+        Call call = game.getCurrentHighestCall();
         int currentScore = 0;
         if (winner.getPlayerNumber() % 2 != 0){
            currentScore = game.getTeams().get(0).getCurrentScore();
