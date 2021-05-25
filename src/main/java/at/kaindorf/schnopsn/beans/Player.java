@@ -1,5 +1,6 @@
 package at.kaindorf.schnopsn.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -13,6 +14,8 @@ public class Player {
     private boolean playsCall;
     private int playerNumber;
     private boolean admin;
+
+    @JsonIgnore
     private WebSocketSession session;
 
     public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, WebSocketSession session) {
@@ -48,7 +51,7 @@ public class Player {
                 ", playsCall=" + playsCall +
                 ", playerNumber=" + playerNumber +
                 ", admin=" + admin +
-                ", session=" + session +
+                ", session=" + session.getId() +
                 '}';
     }
 
