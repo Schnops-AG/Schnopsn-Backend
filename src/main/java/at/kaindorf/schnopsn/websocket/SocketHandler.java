@@ -21,12 +21,8 @@ public class SocketHandler extends TextWebSocketHandler {
      * handler for all INCOMING messages
      */
     @Override
-    public void handleTextMessage(WebSocketSession session, TextMessage uuid) throws IOException {
-
-        /*System.out.println(message);
-        System.out.println(message.getPayload());*/
-        GameLogic.findPlayer(storage.getActivePlayers(),uuid.toString()).setSession(session);
-
+    public void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
+        GameLogic.findPlayer(storage.getActivePlayers(),message.getPayload()).setSession(session);
         session.sendMessage(new TextMessage("a response")); // send Message to client
     }
 
