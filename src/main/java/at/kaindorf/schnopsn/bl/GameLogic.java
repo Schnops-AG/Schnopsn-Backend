@@ -198,4 +198,15 @@ public class GameLogic {
         }
     }
 
+    public String getAllCurrentPlayerNames(Game game){
+        String allNames="";
+        for (Team team:game.getTeams()) {
+            for (Player player:team.getPlayers()) {
+                allNames+= player.getPlayerName();
+                allNames += ";";
+            }
+        }
+        return allNames;
+    }
+
 }

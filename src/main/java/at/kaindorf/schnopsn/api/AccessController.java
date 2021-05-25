@@ -4,7 +4,9 @@ import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.TextMessage;
 
+import java.io.IOException;
 import java.util.*;
 
 
@@ -86,8 +88,14 @@ public class AccessController {
             }
 
             System.out.println(game);
-            //activeGames.stream().filter(game1 -> game1.getGameid().equals(game.getGameid())).findFirst().get().setPlayers(game.getPlayers());
-            return ResponseEntity.status(200).body(GameLogic.findGame(storage.getActiveGames(), gameID));
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(logic.getAllCurrentPlayerNames(game)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+            return ResponseEntity.status(200).body(game);
 
         } catch (NullPointerException e) {
             return ResponseEntity.status(400).body("Player or Game does not exist!"); // no player|game found
