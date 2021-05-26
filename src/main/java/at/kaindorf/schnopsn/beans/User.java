@@ -5,25 +5,53 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
 import java.util.UUID;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-@ToString
+public class User extends Player{
 
-@Entity
-//@Table(name = "users")
-public class User {
+    private String password;
+    private String email;
+    private Statistic statistic;
 
-    @Id
-//    @Column(name = "user_id")
-    private UUID userID;
+    public User(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, String password, String email, Statistic statistic) {
+        super(playerID, playerName, caller, playsCall, playerNumber, admin);
+        this.password = password;
+        this.email = email;
+        this.statistic = statistic;
+    }
 
-    private String name;
-    private int age;
+    // region <getter, setter, toString>
+    public String getPassword() {
+        return password;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Statistic getStatistic() {
+        return statistic;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setStatistic(Statistic statistic) {
+        this.statistic = statistic;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "password='" + password + '\'' +
+                ", email='" + email + '\'' +
+                ", statistic=" + statistic +
+                '}';
+    }
+    //endregion
 }
