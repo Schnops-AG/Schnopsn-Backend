@@ -131,16 +131,10 @@ public class AccessController {
         //Wenn 4erschnopsn dann caller sonst ned
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setCurrentTrump(realColor);
-        int oldCallerNumber = 0;
-        for (Team team : game.getTeams()) {
-            if (team.getPlayers().stream().filter(Player::isCaller).findFirst().orElse(null) != null) {
-                oldCallerNumber = team.getPlayers().stream().filter(Player::isCaller).findFirst().get().getPlayerNumber();
-                break;
-            }
+
+        if (game.getGameType().equals(GameType._4ERSCHNOPSN)) {
+            logic.defineCaller(game);
         }
-        final int finalOldCallerNumber = oldCallerNumber;
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
         return ResponseEntity.status(200).body("started round successfully");
     }
 

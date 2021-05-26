@@ -46,11 +46,11 @@ public class GameLogic {
         List<Player> players = new ArrayList<>();
         players.add(player);
         List<Team> teams = new ArrayList<>();
-        teams.add(new Team(0,0,players));
-        teams.add(new Team(0,0,new ArrayList<>()));
+        teams.add(new Team(0, 0, players));
+        teams.add(new Team(0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType,  null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
         } else if (gameType == GameType._4ERSCHNOPSN) {
             game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
         }
@@ -79,9 +79,9 @@ public class GameLogic {
         return activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null);
     }
 
-    public static int getCurrentNumberOfPlayers(Game game){
+    public static int getCurrentNumberOfPlayers(Game game) {
 
-        return game.getTeams().get(0).getPlayers().size()+game.getTeams().get(1).getPlayers().size();
+        return game.getTeams().get(0).getPlayers().size() + game.getTeams().get(1).getPlayers().size();
     }
 
     public Card getCard(String color, int value) {
@@ -94,7 +94,7 @@ public class GameLogic {
         if (call.getValue() > currentHighestCall.getValue()) {
             game.setCurrentHighestCall(call);
             try {
-                for (Team team:game.getTeams()) {
+                for (Team team : game.getTeams()) {
                     team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get().setPlaysCall(false);
                 }
 
@@ -114,10 +114,9 @@ public class GameLogic {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
-                    if(trumpNeeded(game.getCurrentHighestCall())){
+                    if (trumpNeeded(game.getCurrentHighestCall())) {
                         return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump());
-                    }
-                    else {
+                    } else {
                         return getPlayerWithHighestCard(game.getPlayedCards(), null);
                     }
                 }
@@ -128,10 +127,9 @@ public class GameLogic {
                     game.getPlayedCards().put(player, card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
-                    if(trumpNeeded(game.getCurrentHighestCall())){
+                    if (trumpNeeded(game.getCurrentHighestCall())) {
                         getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump());
-                    }
-                    else {
+                    } else {
                         return getPlayerWithHighestCard(game.getPlayedCards(), null);
                     }
                 }
@@ -147,7 +145,7 @@ public class GameLogic {
             playCards.add(playMap.get(player));
         }
         Color firstColor = playCards.get(0).getColor();
-        //playCards.removeIf(card -> card.getValue())
+
         System.out.println(playCards);
         int count = 0;
         while (playCards.size() > 1) {
@@ -177,20 +175,21 @@ public class GameLogic {
         }
         return null;
     }
-    public boolean trumpNeeded(Call call){
+
+    public boolean trumpNeeded(Call call) {
         return switch (call) {
             case BETTLER, ASSENBETTLER, PLAUDERER, GANG, ZEHNERGANG -> false;
             default -> true;
         };
     }
 
-    public void awardForPoints(Player winner, Game game){
+    public void awardForPoints(Player winner, Game game) {
         Call call = game.getCurrentHighestCall();
         int currentScore = 0;
-        if (winner.getPlayerNumber() % 2 != 0){
-           currentScore = game.getTeams().get(0).getCurrentScore();
-           currentScore += call.getValue();
-           game.getTeams().get(0).setCurrentScore(currentScore);
+        if (winner.getPlayerNumber() % 2 != 0) {
+            currentScore = game.getTeams().get(0).getCurrentScore();
+            currentScore += call.getValue();
+            game.getTeams().get(0).setCurrentScore(currentScore);
         } else {
             currentScore = game.getTeams().get(1).getCurrentScore();
             currentScore += call.getValue();
@@ -198,15 +197,33 @@ public class GameLogic {
         }
     }
 
-    public String getAllCurrentPlayerNames(Game game){
-        String allNames="";
-        for (Team team:game.getTeams()) {
-            for (Player player:team.getPlayers()) {
-                allNames+= player.getPlayerName();
+    public String getAllCurrentPlayerNames(Game game) {
+        String allNames = "";
+        for (Team team : game.getTeams()) {
+            for (Player player : team.getPlayers()) {
+                allNames += player.getPlayerName();
                 allNames += ";";
             }
         }
         return allNames;
     }
 
+    public void defineCaller(Game game) {
+        int oldCallerNumber = 0;
+        for (Team team : game.getTeams()) {
+            if (team.getPlayers().stream().filter(Player::isCaller).findFirst().orElse(null) != null) {
+                oldCallerNumber = team.getPlayers().stream().filter(Player::isCaller).findFirst().get().getPlayerNumber();
+                break;
+            }
+        }
+        final int finalOldCallerNumber = oldCallerNumber;
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
+    }
+
+    public Map<Player, List<Card>> giveOutCards(Game game){
+        List<Card> tempList = new ArrayList<>(allCards);
+        Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+        return playerCardMap;
+    }
 }
