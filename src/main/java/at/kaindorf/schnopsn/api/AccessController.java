@@ -104,6 +104,38 @@ public class AccessController {
         }
     }
 
+    @PostMapping(path="/startRound2erSchnopsn")
+    public Object startRound2erSchnopsn(@RequestParam("gameID") String gameID) {
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+        UUID realGameID;
+
+        try {
+            realGameID = UUID.fromString(gameID);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body("Wrong color or wrong format of gameID"); // wrong format of gameID or wrong color
+        }
+
+        //Karten Methode 5 zurück
+        Game game = GameLogic.findGame(storage.getActiveGames(),gameID);
+        Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+        playerCardMap = logic.giveOutCards(game);
+        Card trumpCard = logic.getTrumpCard(game);
+        game.setCurrentTrump(trumpCard.getColor());
+
+        for (Player player: playerCardMap.keySet()) {
+            try {
+                player.getSession().sendMessage(new TextMessage(playerCardMap.get(player) + ""));
+                player.getSession().sendMessage(new TextMessage(trumpCard+""));
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+        return ResponseEntity.status(400).body("Hurray!");
+    }
+
     @PostMapping(path = "/startRound")
     public Object startRound(@RequestParam("gameID") String gameID, @RequestParam("color") String color) {
 

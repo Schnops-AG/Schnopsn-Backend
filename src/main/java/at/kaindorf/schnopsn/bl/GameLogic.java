@@ -50,9 +50,9 @@ public class GameLogic {
         teams.add(new Team(0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(),allCards);
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(),allCards);
         }
         player.setPlayerNumber(1);
         game.setInviteLink(generateInviteLink(game));
@@ -222,8 +222,34 @@ public class GameLogic {
     }
 
     public Map<Player, List<Card>> giveOutCards(Game game){
-        List<Card> tempList = new ArrayList<>(allCards);
+        game.getAvailableCards().clear();
+        game.getAvailableCards().addAll(allCards);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+        for (Team team : game.getTeams()) {
+            team.getPlayers().forEach(player -> {
+                List<Card> playerCardList = new ArrayList<>();
+                for (int i = 0; i < 5; i++) {
+                    if (playerCardMap.containsKey(player)){
+                        playerCardMap.get(player).add(getRandomCard(game.getAvailableCards()));
+                    }else{
+                        playerCardList.add(getRandomCard(game.getAvailableCards()));
+                        playerCardMap.put(player,playerCardList);
+                    }
+                }
+            });
+        }
         return playerCardMap;
+    }
+
+    public Card getTrumpCard(Game game){
+        return getRandomCard(game.getAvailableCards());
+    }
+
+    public Card getRandomCard(List<Card> availableCards){
+        Random rand = new Random();
+        int index=rand.nextInt(availableCards.size());
+        Card card = availableCards.get(index);
+        availableCards.remove(index);
+        return card;
     }
 }
