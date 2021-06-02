@@ -225,6 +225,7 @@ public class GameLogic {
         game.getAvailableCards().clear();
         game.getAvailableCards().addAll(allCards);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+        System.out.println(game.getAvailableCards().size());
         for (Team team : game.getTeams()) {
             team.getPlayers().forEach(player -> {
                 List<Card> playerCardList = new ArrayList<>();
@@ -247,9 +248,10 @@ public class GameLogic {
 
     public Card getRandomCard(List<Card> availableCards){
         Random rand = new Random();
+        System.out.println(availableCards.size());
         int index=rand.nextInt(availableCards.size());
-        Card card = availableCards.get(index);
-        availableCards.remove(index);
-        return card;
+        //Card card = availableCards.get(index);
+        //availableCards.remove(index);
+        return new Card();
     }
 }

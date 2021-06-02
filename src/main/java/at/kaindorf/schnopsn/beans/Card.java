@@ -18,6 +18,9 @@ public class Card {
         this.color = color;
     }
 
+    public Card() {
+    }
+
     // region <getter, setter, toString>
     public String getName() {
         return name;

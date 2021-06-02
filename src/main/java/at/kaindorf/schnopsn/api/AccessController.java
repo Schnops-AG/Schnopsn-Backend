@@ -2,13 +2,15 @@ package at.kaindorf.schnopsn.api;
 
 import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
+import com.google.gson.JsonObject;
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
 import java.util.*;
-
+import org.json.*;
 
 @RestController
 @RequestMapping("api/v1")
@@ -88,13 +90,13 @@ public class AccessController {
             }
 
             System.out.println(game);
-            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+            /*game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     player1.getSession().sendMessage(new TextMessage(logic.getAllCurrentPlayerNames(game)));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }));
+            }));*/
             return ResponseEntity.status(200).body(game);
 
         } catch (NullPointerException e) {
@@ -125,13 +127,17 @@ public class AccessController {
         game.setCurrentTrump(trumpCard.getColor());
 
         for (Player player: playerCardMap.keySet()) {
+               // JsonObject jsonObject = new JsonObject(playerCardMap.get(player).toString());
             try {
-                player.getSession().sendMessage(new TextMessage(playerCardMap.get(player) + ""));
-                player.getSession().sendMessage(new TextMessage(trumpCard+""));
-            }
-            catch(IOException e){
+                JSONObject json = new JSONObject(playerCardMap.toString());
+                /*player.getSession().sendMessage(new TextMessage(json.toString()));
+                player.getSession().sendMessage(new TextMessage(trumpCard+""));*/
+                System.out.println(json);
+            } catch (JSONException e) {
                 e.printStackTrace();
-            }
+            } /*catch (IOException e) {
+                e.printStackTrace();
+            }*/
         }
         return ResponseEntity.status(400).body("Hurray!");
     }

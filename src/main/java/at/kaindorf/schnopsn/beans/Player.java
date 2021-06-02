@@ -51,7 +51,6 @@ public class Player {
                 ", playsCall=" + playsCall +
                 ", playerNumber=" + playerNumber +
                 ", admin=" + admin +
-                ", session=" + session.getId() +
                 '}';
     }
 
