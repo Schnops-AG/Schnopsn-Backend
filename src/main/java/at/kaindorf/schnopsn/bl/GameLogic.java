@@ -1,15 +1,22 @@
 package at.kaindorf.schnopsn.bl;
 
+import at.kaindorf.schnopsn.api.GameStorage;
 import at.kaindorf.schnopsn.beans.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.socket.TextMessage;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GameLogic {
 
     private List<Card> allCards = new ArrayList<>();
+    private GameStorage storage = GameStorage.getInstance();
 
     public GameLogic() {
         try {
@@ -41,24 +48,26 @@ public class GameLogic {
         }
     }
 
+    //erstellt ein Game
     public Game createGame(GameType gameType, Player player) {
         Game game = null;
         List<Player> players = new ArrayList<>();
         players.add(player);
         List<Team> teams = new ArrayList<>();
-        teams.add(new Team(0, 0, players));
-        teams.add(new Team(0, 0, new ArrayList<>()));
+        teams.add(new Team(0, 0, 0, players));
+        teams.add(new Team(0, 0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(),allCards);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards);
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(),allCards);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards);
         }
         player.setPlayerNumber(1);
         game.setInviteLink(generateInviteLink(game));
         return game;
     }
 
+    //generiert einen invitelink zu einem Game
     public URL generateInviteLink(Game game) {
         URL inviteLink;
         try {
@@ -69,11 +78,13 @@ public class GameLogic {
         return inviteLink;
     }
 
+    //sucht sich einen Spieler aus allen aktiven Spielern
     public static Player findPlayer(List<Player> activePlayers, String playerID) throws IllegalArgumentException {
         UUID realPlayerID = UUID.fromString(playerID);
         return activePlayers.stream().filter(player1 -> player1.getPlayerID().equals(realPlayerID)).findFirst().orElse(null);
     }
 
+    //sucht sich ein Game aus allen aktiven Games
     public static Game findGame(List<Game> activeGames, String gameID) {
         UUID realGameID = UUID.fromString(gameID);
         return activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null);
@@ -89,6 +100,7 @@ public class GameLogic {
         return allCards.stream().filter(card -> card.getColor().equals(realColor) && card.getValue() == value).findFirst().get();
     }
 
+    //überprüft ob eine Ansage höher als die aktuell höchste Ansage in einem Spiel ist
     public boolean isCallHigher(Game game, Call call, Player player) {
         Call currentHighestCall = game.getCurrentHighestCall();
         if (call.getValue() > currentHighestCall.getValue()) {
@@ -107,6 +119,7 @@ public class GameLogic {
         return false;
     }
 
+    //wartet bis alle Spieler ausgespielt haben und holt sich dann den Gewinner
     public UUID makeRightMove(Game game, Card card, Player player) {
         switch (game.getCurrentHighestCall()) {
             case BETTLER, ASSENBETTLER, PLAUDERER:
@@ -138,6 +151,7 @@ public class GameLogic {
         return null;
     }
 
+    //definiertwelcher Spieler den Stich bekommt (welche Karte die Höchste ist)
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump) {
         List<Card> playCards = new ArrayList<>();
 
@@ -176,6 +190,7 @@ public class GameLogic {
         return null;
     }
 
+
     public boolean trumpNeeded(Call call) {
         return switch (call) {
             case BETTLER, ASSENBETTLER, PLAUDERER, GANG, ZEHNERGANG -> false;
@@ -183,17 +198,40 @@ public class GameLogic {
         };
     }
 
-    public void awardForPoints(Player winner, Game game) {
+    //vergibt punkte für ansagen
+    public void awardForPoints4erSchnopsn(Player winner, Game game) {
         Call call = game.getCurrentHighestCall();
-        int currentScore = 0;
+        int currentGameScore = 0;
         if (winner.getPlayerNumber() % 2 != 0) {
-            currentScore = game.getTeams().get(0).getCurrentScore();
-            currentScore += call.getValue();
-            game.getTeams().get(0).setCurrentScore(currentScore);
+            currentGameScore = game.getTeams().get(0).getCurrentScore();
+            currentGameScore += call.getValue();
+            game.getTeams().get(0).setCurrentGameScore(currentGameScore);
         } else {
-            currentScore = game.getTeams().get(1).getCurrentScore();
-            currentScore += call.getValue();
-            game.getTeams().get(1).setCurrentScore(currentScore);
+            currentGameScore = game.getTeams().get(1).getCurrentScore();
+            currentGameScore += call.getValue();
+            game.getTeams().get(1).setCurrentGameScore(currentGameScore);
+        }
+    }
+
+    public void endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
+        int winnerTeam = 0;
+        int currentGameScore = 0;
+        if (winner.getPlayerNumber() % 2 != 0) {
+            winnerTeam = 1;
+        }
+
+        if (looserPoints == 0) {
+            currentGameScore = game.getTeams().get(winnerTeam).getCurrentGameScore();
+            currentGameScore += 3;
+            game.getTeams().get(winnerTeam).setCurrentGameScore(currentGameScore);
+        } else if (looserPoints < 33) {
+            currentGameScore = game.getTeams().get(winnerTeam).getCurrentGameScore();
+            currentGameScore += 2;
+            game.getTeams().get(winnerTeam).setCurrentGameScore(currentGameScore);
+        } else {
+            currentGameScore = game.getTeams().get(winnerTeam).getCurrentGameScore();
+            currentGameScore += 1;
+            game.getTeams().get(winnerTeam).setCurrentGameScore(currentGameScore);
         }
     }
 
@@ -208,6 +246,7 @@ public class GameLogic {
         return allNames;
     }
 
+    //define which player is the next one who is allowed to call trump
     public void defineCaller(Game game) {
         int oldCallerNumber = 0;
         for (Team team : game.getTeams()) {
@@ -221,20 +260,19 @@ public class GameLogic {
         game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
     }
 
-    public Map<Player, List<Card>> giveOutCards(Game game){
-        game.getAvailableCards().clear();
-        game.getAvailableCards().addAll(allCards);
+    //give Crads for each player
+    public Map<Player, List<Card>> giveOutCards(Game game) {
+        game.setAvailableCards(allCards);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
-        System.out.println(game.getAvailableCards().size());
         for (Team team : game.getTeams()) {
             team.getPlayers().forEach(player -> {
                 List<Card> playerCardList = new ArrayList<>();
                 for (int i = 0; i < 5; i++) {
-                    if (playerCardMap.containsKey(player)){
-                        playerCardMap.get(player).add(getRandomCard(game.getAvailableCards()));
-                    }else{
-                        playerCardList.add(getRandomCard(game.getAvailableCards()));
-                        playerCardMap.put(player,playerCardList);
+                    if (playerCardMap.containsKey(player)) {
+                        playerCardMap.get(player).add(getRandomCard(game.getAvailableCards(), false));
+                    } else {
+                        playerCardList.add(getRandomCard(game.getAvailableCards(), false));
+                        playerCardMap.put(player, playerCardList);
                     }
                 }
             });
@@ -242,16 +280,76 @@ public class GameLogic {
         return playerCardMap;
     }
 
-    public Card getTrumpCard(Game game){
-        return getRandomCard(game.getAvailableCards());
+    public Card getTrumpCard(Game game) {
+        return getRandomCard(game.getAvailableCards(), true);
     }
 
-    public Card getRandomCard(List<Card> availableCards){
+    // get one random Card of the available Cards of a game
+    public Card getRandomCard(List<Card> availableCards, boolean isTrumpCard) {
         Random rand = new Random();
-        System.out.println(availableCards.size());
-        int index=rand.nextInt(availableCards.size());
-        //Card card = availableCards.get(index);
-        //availableCards.remove(index);
-        return new Card();
+        int index = 0;
+        if (availableCards.size() == 1) {
+            return availableCards.get(0);
+        } else {
+            index = rand.nextInt(availableCards.size() - 1);
+        }
+        Card card = availableCards.get(index);
+        availableCards.remove(index);
+        if (isTrumpCard) {
+            availableCards.add(card);
+        }
+        return card;
+    }
+
+    //sendData toPlayers after one has played out a card
+    public void sendStingDataToPlayers(Game game, UUID winnerID) {
+        List<Card> cards = game.getPlayedCards().values().stream().collect(Collectors.toList());
+        ObjectMapper mapper = new ObjectMapper();
+
+        if (winnerID == null) {
+            //Sends a message to all players, about who will play next
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    if (player1.getPlayerNumber() == player1.getPlayerNumber() % game.getMaxNumberOfPlayers() + 1) {
+                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + true));
+                    } else {
+                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + false));
+                    }
+                    player1.getSession().sendMessage(new TextMessage("\"playedCards:\"" + mapper.writeValueAsString(cards)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        } else {
+            Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
+
+            int points = 0;
+            for (Card card1 : cards) {
+                points += card1.getValue();
+            }
+            for (Player player1 : game.getPlayedCards().keySet()) {
+                try {
+                    //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
+                    if (player1.getPlayerID() == winnerID) {
+                        player1.getSession().sendMessage(new TextMessage("\"sting:\"" + mapper.writeValueAsString(cards)));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString("\"stingPoints:\"" + points)));
+                        player1.setMyTurn(true);
+                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + true));
+                    } else {
+                        player1.getSession().sendMessage(new TextMessage("\"winner:\"" + winner.getPlayerName()));
+                        player1.setMyTurn(false);
+                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + false));
+                    }
+                    //karte ziehen und zurückschicken nur bei 2er schnopsn
+                    if (game.getGameType() == GameType._2ERSCHNOPSN) {
+                        player1.getSession().sendMessage(new TextMessage("\"newCard:\"" + getRandomCard(game.getAvailableCards(),false)));
+                    }
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

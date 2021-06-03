@@ -4,14 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Team {
+    private int currentGameScore;
     private int currentScore;
     private int currentBummerl;
     private List<Player> players;
 
-    public Team(int currentScore, int currentBummerl, List<Player> players) {
+    public Team(int currentGameScore, int currentScore, int currentBummerl, List<Player> players) {
+        this.currentGameScore = currentGameScore;
         this.currentScore = currentScore;
         this.currentBummerl = currentBummerl;
         this.players = players;
@@ -21,6 +24,14 @@ public class Team {
     }
 
     // region <getter, setter, toString>
+
+    public int getCurrentGameScore() {
+        return currentGameScore;
+    }
+
+    public void setCurrentGameScore(int currentGameScore) {
+        this.currentGameScore = currentGameScore;
+    }
 
     public int getCurrentScore() {
         return currentScore;
@@ -47,33 +58,17 @@ public class Team {
     }
 
     @Override
-    public String toString() {
-        return "Team{" +
-                "currentScore=" + currentScore +
-                ", currentBummerl=" + currentBummerl +
-                ", players=" + players +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Team team = (Team) o;
-
-        if (currentScore != team.currentScore) return false;
-        if (currentBummerl != team.currentBummerl) return false;
-        return players != null ? players.equals(team.players) : team.players == null;
+        return currentGameScore == team.currentGameScore && currentScore == team.currentScore && currentBummerl == team.currentBummerl && Objects.equals(players, team.players);
     }
 
     @Override
     public int hashCode() {
-        int result = currentScore;
-        result = 31 * result + currentBummerl;
-        result = 31 * result + (players != null ? players.hashCode() : 0);
-        return result;
+        return Objects.hash(currentGameScore, currentScore, currentBummerl, players);
     }
 
-    // endregion
+// endregion
 }

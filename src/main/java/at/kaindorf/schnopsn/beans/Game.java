@@ -15,7 +15,9 @@ public class Game {
     private int maxNumberOfPlayers;
     private List<Team> teams;
     private Call currentHighestCall;
-    private Map<Player,Card> playedCards;
+    //ausgespielte Karten (makeMoveByCall)
+    private Map<Player, Card> playedCards;
+    //Stapel (welche Karten man noch ziehen kann)
     private List<Card> availableCards;
 
     public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards) {
