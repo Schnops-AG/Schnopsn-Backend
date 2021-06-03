@@ -30,7 +30,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body("Empty or invalid playerName");
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false,null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -138,20 +138,21 @@ public class AccessController {
         //Karten Methode 5 zurück
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
-        playerCardMap = logic.giveOutCards(game,5);
+        playerCardMap = logic.giveOutCards(game, 5);
         Card trumpCard = logic.getTrumpCard(game);
         game.setCurrentTrump(trumpCard.getColor());
 
         //Stichpunkte zurücksetzen
-        for (Team team:game.getTeams()) {
+        for (Team team : game.getTeams()) {
             team.setCurrentScore(0);
         }
+        game.getPlayedCards().clear();
 
 
         for (Player player : playerCardMap.keySet()) {
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"trumpCard:\"" +mapper.writeValueAsString(trumpCard)));
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trumpCard:\"" + mapper.writeValueAsString(trumpCard)));
                 player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -231,21 +232,25 @@ public class AccessController {
     }
 
     @PostMapping(path = "/getCards4erSchnopsn")
-    public Object getCards4erSchnopsn(@RequestParam("gameID") String gameID){
+    public Object getCards4erSchnopsn(@RequestParam("gameID") String gameID) {
         //Serverintern: jeder bekommt seine 5 Karten -> geschickt werden nur die ersten 3; dann Trumpf die letzten 2
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        Map<Player,List<Card>> playerCardMap = logic.giveOutCards(game,3);
+        Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
         for (Player player : playerCardMap.keySet()) {
-            if(player.isCaller()){
+            if (player.isCaller()) {
                 player.setMyTurn(true);
             }
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"caller:\"" +player.isCaller()));
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"caller:\"" + player.isCaller()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+        game.setCurrentHighestCall(Call.NORMAL);
+        game.setCurrentTrump(null);
+        game.getPlayedCards().clear();
+
         return ResponseEntity.status(200).body("got cards successfully");
     }
 
@@ -273,12 +278,12 @@ public class AccessController {
 
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setCurrentTrump(realColor);
-        Map<Player,List<Card>> playerCardMap = logic.giveOutCards(game,2);
+        Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 2);
         for (Player player : playerCardMap.keySet()) {
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"trump:\"" +realColor));
-                player.getSession().sendMessage(new TextMessage("\"myTurn:\""+player.isMyTurn()));
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trump:\"" + realColor));
+                player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -316,7 +321,48 @@ public class AccessController {
         if (player == null) {
             return ResponseEntity.status(404).body("No player found");
         }
-        logic.isCallHigher(GameLogic.findGame(storage.getActiveGames(), gameID), validCall, player);
+
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        game.setNumberOfCalledCalls(game.getNumberOfCalledCalls() + 1);
+        logic.isCallHigher(game, validCall, player);
+
+        if (game.getNumberOfCalledCalls() == 4) {
+            //send Data
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isPlaysCall()) {
+                    player1.setMyTurn(true);
+                } else {
+                    player1.setMyTurn(false);
+                }
+                try {
+                    player1.getSession().sendMessage(new TextMessage("finished with Calls"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        } else {
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isMyTurn()) {
+                    game.getTeams().stream().forEach(team1 -> team.getPlayers().stream().forEach(player2 -> {
+                        if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
+                            player2.setMyTurn(true);
+                        }
+                    }));
+                }
+            }));
+            player.setMyTurn(false);
+        }
+
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+            try {
+                player1.getSession().sendMessage(new TextMessage("\"highestCall:\"" + mapper.writeValueAsString(game.getCurrentHighestCall())));
+                player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player1.isMyTurn()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+
+
         return ResponseEntity.status(200).body("");
     }
 }

@@ -1,9 +1,5 @@
 package at.kaindorf.schnopsn.beans;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.net.URL;
 import java.util.*;
 
@@ -19,8 +15,9 @@ public class Game {
     private Map<Player, Card> playedCards;
     //Stapel (welche Karten man noch ziehen kann)
     private List<Card> availableCards;
+    private int numberOfCalledCalls;
 
-    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards) {
+    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls) {
         this.gameID = gameID;
         this.gameType = gameType;
         this.inviteLink = inviteLink;
@@ -30,9 +27,7 @@ public class Game {
         this.currentHighestCall = currentHighestCall;
         this.playedCards = playedCards;
         this.availableCards = availableCards;
-    }
-
-    public Game() {
+        this.numberOfCalledCalls = numberOfCalledCalls;
     }
 
     public UUID getGameID() {
@@ -107,16 +102,24 @@ public class Game {
         this.availableCards = availableCards;
     }
 
+    public int getNumberOfCalledCalls() {
+        return numberOfCalledCalls;
+    }
+
+    public void setNumberOfCalledCalls(int numberOfCalledCalls) {
+        this.numberOfCalledCalls = numberOfCalledCalls;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Game game = (Game) o;
-        return maxNumberOfPlayers == game.maxNumberOfPlayers && gameID.equals(game.gameID) && gameType == game.gameType && inviteLink.equals(game.inviteLink) && currentTrump == game.currentTrump && teams.equals(game.teams) && currentHighestCall == game.currentHighestCall && playedCards.equals(game.playedCards) && availableCards.equals(game.availableCards);
+        return maxNumberOfPlayers == game.maxNumberOfPlayers && numberOfCalledCalls == game.numberOfCalledCalls && Objects.equals(gameID, game.gameID) && gameType == game.gameType && Objects.equals(inviteLink, game.inviteLink) && currentTrump == game.currentTrump && Objects.equals(teams, game.teams) && currentHighestCall == game.currentHighestCall && Objects.equals(playedCards, game.playedCards) && Objects.equals(availableCards, game.availableCards);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gameID, gameType, inviteLink, currentTrump, maxNumberOfPlayers, teams, currentHighestCall, playedCards, availableCards);
+        return Objects.hash(gameID, gameType, inviteLink, currentTrump, maxNumberOfPlayers, teams, currentHighestCall, playedCards, availableCards, numberOfCalledCalls);
     }
 }
