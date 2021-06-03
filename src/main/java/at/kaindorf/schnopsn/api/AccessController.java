@@ -4,19 +4,15 @@ import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.json.*;
 
-import javax.persistence.criteria.CriteriaBuilder;
 
 @RestController
 @RequestMapping("api/v1")
@@ -62,8 +58,8 @@ public class AccessController {
             Game newGame = logic.createGame(realGameType, player);
             storage.getActiveGames().add(newGame);
 
-            //Ab hier nur getestet
-           /* Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, null);
+            // Ab hier nur getestet
+            /*Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, false,null);
             storage.getActivePlayers().add(newPlayer);
             newGame.getTeams().get(1).getPlayers().add(newPlayer);
 
@@ -71,13 +67,6 @@ public class AccessController {
                 String json = mapper.writeValueAsString(logic.giveOutCards(newGame).get(player));
                 System.out.println(json);
             } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                JSONObject json = new JSONObject(logic.giveOutCards(newGame).toString());
-                System.out.println(json);
-            } catch (JSONException e) {
                 e.printStackTrace();
             }*/
             //Ende Testung
