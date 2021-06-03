@@ -64,7 +64,7 @@ public class AccessController {
             newGame.getTeams().get(1).getPlayers().add(newPlayer);
 
             try {
-                String json = mapper.writeValueAsString(logic.giveOutCards(newGame).get(player));
+                String json = mapper.writeValueAsString(logic.giveOutCards(newGame,5).get(player));
                 System.out.println(json);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
@@ -138,15 +138,20 @@ public class AccessController {
         //Karten Methode 5 zurück
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
-        playerCardMap = logic.giveOutCards(game);
+        playerCardMap = logic.giveOutCards(game,5);
         Card trumpCard = logic.getTrumpCard(game);
         game.setCurrentTrump(trumpCard.getColor());
+
+        //Stichpunkte zurücksetzen
+        for (Team team:game.getTeams()) {
+            team.setCurrentScore(0);
+        }
 
 
         for (Player player : playerCardMap.keySet()) {
             try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(trumpCard)));
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trumpCard:\"" +mapper.writeValueAsString(trumpCard)));
                 player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -162,39 +167,6 @@ public class AccessController {
         return ResponseEntity.status(400).body("Hurray!");
     }
 
-
-
-    @PostMapping(path = "/makeCall")
-    public Object makeCall(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("call") String call) {
-
-        // if invalid playerID
-        if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
-        }
-
-        // if invalid gameID
-        if (gameID == null || gameID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
-        }
-
-        if (call == null) {
-            return ResponseEntity.status(400).body("No call given!");
-        }
-
-        Call validCall;
-        try {
-            validCall = Call.valueOf(call.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("Invalid call!");
-        }
-
-        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
-        if (player == null) {
-            return ResponseEntity.status(404).body("No player found");
-        }
-
-        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(storage.getActiveGames(), gameID), validCall, player));
-    }
 
     //Stichfunktion
     @PostMapping(path = "/makeMoveByCall")
@@ -227,7 +199,7 @@ public class AccessController {
         }
     }
 
-    @PostMapping(path = "/endOfRound2erSchnopsn")
+    /*@PostMapping(path = "/endOfRound2erSchnopsn")
     public Object endOfRound(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("looserPoints") String points) {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Player winner = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
@@ -241,33 +213,39 @@ public class AccessController {
             }
         }));
         return ResponseEntity.status(200).body(game);
-    }
+    }*/
 
     @PostMapping(path = "/endOfGame2erSchnopsn")
     public Object endOfGame(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
+            try {
+                player.getSession().sendMessage(new TextMessage("Game is over!"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+        storage.getActiveGames().remove(game);
 
-        return ResponseEntity.status(200).body("");
+        return ResponseEntity.status(200).body("Game over!");
     }
 
     @PostMapping(path = "/getCards4erSchnopsn")
     public Object getCards4erSchnopsn(@RequestParam("gameID") String gameID){
         //Serverintern: jeder bekommt seine 5 Karten -> geschickt werden nur die ersten 3; dann Trumpf die letzten 2
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        List<Card> allCardsOfPlayer = new ArrayList<>();
-        /*game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
-            List<Card> allCardsOfPlayer = logic.giveOutCards(game).get(player)
+        Map<Player,List<Card>> playerCardMap = logic.giveOutCards(game,3);
+        for (Player player : playerCardMap.keySet()) {
+            if(player.isCaller()){
+                player.setMyTurn(true);
+            }
             try {
-                List<Card> cardList = new ArrayList<>();
-
-                for (int i = 0; i < 3; i++) {
-                    cardList.add()
-                }
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"caller:\"" +player.isCaller()));
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }));*/
+        }
         return ResponseEntity.status(200).body("got cards successfully");
     }
 
@@ -295,8 +273,50 @@ public class AccessController {
 
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setCurrentTrump(realColor);
+        Map<Player,List<Card>> playerCardMap = logic.giveOutCards(game,2);
+        for (Player player : playerCardMap.keySet()) {
+            try {
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" +mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trump:\"" +realColor));
+                player.getSession().sendMessage(new TextMessage("\"myTurn:\""+player.isMyTurn()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         logic.defineCaller(game);
 
         return ResponseEntity.status(200).body("started round successfully");
+    }
+
+    @PostMapping(path = "/makeCall")
+    public Object makeCall(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("call") String call) {
+
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+
+        if (call == null) {
+            return ResponseEntity.status(400).body("No call given!");
+        }
+
+        Call validCall;
+        try {
+            validCall = Call.valueOf(call.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body("Invalid call!");
+        }
+
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        if (player == null) {
+            return ResponseEntity.status(404).body("No player found");
+        }
+        logic.isCallHigher(GameLogic.findGame(storage.getActiveGames(), gameID), validCall, player);
+        return ResponseEntity.status(200).body("");
     }
 }

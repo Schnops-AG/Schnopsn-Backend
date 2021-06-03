@@ -213,7 +213,7 @@ public class GameLogic {
         }
     }
 
-    public void endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
+    public boolean endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
         int winnerTeam = 0;
         int currentGameScore = 0;
         if (winner.getPlayerNumber() % 2 != 0) {
@@ -232,6 +232,12 @@ public class GameLogic {
             currentGameScore = game.getTeams().get(winnerTeam).getCurrentGameScore();
             currentGameScore += 1;
             game.getTeams().get(winnerTeam).setCurrentGameScore(currentGameScore);
+        }
+        if(game.getTeams().get(winnerTeam).getCurrentGameScore()>6){
+            return true;
+        }
+        else{
+            return false;
         }
     }
 
@@ -261,13 +267,13 @@ public class GameLogic {
     }
 
     //give Crads for each player
-    public Map<Player, List<Card>> giveOutCards(Game game) {
+    public Map<Player, List<Card>> giveOutCards(Game game, int anz) {
         game.setAvailableCards(allCards);
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
         for (Team team : game.getTeams()) {
             team.getPlayers().forEach(player -> {
                 List<Card> playerCardList = new ArrayList<>();
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < anz; i++) {
                     if (playerCardMap.containsKey(player)) {
                         playerCardMap.get(player).add(getRandomCard(game.getAvailableCards(), false));
                     } else {
@@ -331,19 +337,69 @@ public class GameLogic {
                 try {
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
+
                         player1.getSession().sendMessage(new TextMessage("\"sting:\"" + mapper.writeValueAsString(cards)));
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString("\"stingPoints:\"" + points)));
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + true));
+                        //Punkte setzten
+                        game.getTeams().get(player1.getPlayerNumber()%2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber()%2).getCurrentGameScore()+points);
+
+
+
                     } else {
                         player1.getSession().sendMessage(new TextMessage("\"winner:\"" + winner.getPlayerName()));
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + false));
                     }
                     //karte ziehen und zurückschicken nur bei 2er schnopsn
+
                     if (game.getGameType() == GameType._2ERSCHNOPSN) {
-                        player1.getSession().sendMessage(new TextMessage("\"newCard:\"" + getRandomCard(game.getAvailableCards(),false)));
+                        //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
+                        if(game.getTeams().get(player1.getPlayerNumber()%2).getCurrentScore()>65 || game.getAvailableCards().size()==0){
+                            for (Player player3 : game.getPlayedCards().keySet()){
+                                player3.getSession().sendMessage(new TextMessage("\"winnerOfRound:\""+game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().get(0).getPlayerName()));
+                            }
+                            //Punkte vergeben und überprüfen ob Bummerl gegeben wird
+                            if(endOfRound2erSchnopsn(game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().get(0),game,game.getTeams().get(player1.getPlayerNumber()%2+1).getCurrentScore())){
+                                game.getTeams().get(player1.getPlayerNumber()%2).setCurrentBummerl(game.getTeams().get(player1.getPlayerNumber()%2).getCurrentBummerl()+1);
+                                Map<String,Integer> bummerl = new LinkedHashMap<>();
+                                //alle Bummerl holen
+                                for (Team team: game.getTeams()) {
+                                    bummerl.put(team.getPlayers().get(0).getPlayerName(),team.getCurrentBummerl());
+                                }
+                                //Bummerlstand zurückschicken
+                                game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
+                                    try {
+                                        player4.getSession().sendMessage(new TextMessage("\"Bummerl:\""+mapper.writeValueAsString(bummerl)));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }));
+                            }
+                            else{
+                                //GameScore zurückschicken
+                                Map<String,Integer> gamescore = new LinkedHashMap<>();
+                                //alle Gamescore holen
+                                for (Team team: game.getTeams()) {
+                                    gamescore.put(team.getPlayers().get(0).getPlayerName(),team.getCurrentGameScore());
+                                }
+                                //Gamescorestand zurückschicken
+                                game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
+                                    try {
+                                        player4.getSession().sendMessage(new TextMessage("\"Gamescore:\""+mapper.writeValueAsString(gamescore)));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }));
+                            }
+                        }
+                        else {
+                            player1.getSession().sendMessage(new TextMessage("\"newCard:\"" + getRandomCard(game.getAvailableCards(), false)));
+                        }
+
                     }
+
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
