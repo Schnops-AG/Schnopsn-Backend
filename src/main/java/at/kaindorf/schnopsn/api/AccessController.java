@@ -148,12 +148,12 @@ public class AccessController {
         }
         game.getPlayedCards().clear();
 
-
+        
         for (Player player : playerCardMap.keySet()) {
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"trumpCard:\"" + mapper.writeValueAsString(trumpCard)));
-                player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trumpCard", trumpCard))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -165,7 +165,7 @@ public class AccessController {
         }
         //neuen playsCall setzten
 
-        return ResponseEntity.status(400).body("Hurray!");
+        return ResponseEntity.status(200).body("Hurray!");
     }
 
 
