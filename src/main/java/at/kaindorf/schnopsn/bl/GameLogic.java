@@ -317,11 +317,13 @@ public class GameLogic {
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     if (player1.getPlayerNumber() == player1.getPlayerNumber() % game.getMaxNumberOfPlayers() + 1) {
-                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + true));
+                        player1.setMyTurn(true);
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                     } else {
-                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + false));
+                        player1.setMyTurn(false);
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", false))));
                     }
-                    player1.getSession().sendMessage(new TextMessage("\"playedCards:\"" + mapper.writeValueAsString(cards)));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -338,18 +340,18 @@ public class GameLogic {
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
 
-                        player1.getSession().sendMessage(new TextMessage("\"sting:\"" + mapper.writeValueAsString(cards)));
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString("\"stingPoints:\"" + points)));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingPoints", points))));
                         player1.setMyTurn(true);
-                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + true));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                         //Punkte setzten
                         game.getTeams().get(player1.getPlayerNumber() % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentGameScore() + points);
 
 
                     } else {
-                        player1.getSession().sendMessage(new TextMessage("\"winner:\"" + winner.getPlayerName()));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("winner", winner.getPlayerName()))));
                         player1.setMyTurn(false);
-                        player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + false));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                     }
                     //karte ziehen und zurückschicken nur bei 2er schnopsn
 
@@ -357,7 +359,7 @@ public class GameLogic {
                         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
                         if (game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() > 65 || game.getAvailableCards().size() == 0) {
                             for (Player player3 : game.getPlayedCards().keySet()) {
-                                player3.getSession().sendMessage(new TextMessage("\"winnerOfRound:\"" + game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().get(0).getPlayerName()));
+                                player3.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("winnerOfRound", game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().get(0).getPlayerName()))));
                             }
                             //Punkte vergeben und überprüfen ob Bummerl gegeben wird
                             if (endOfRound2erSchnopsn(game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().get(0), game, game.getTeams().get(player1.getPlayerNumber() % 2 + 1).getCurrentScore())) {
@@ -370,7 +372,7 @@ public class GameLogic {
                                 //Bummerlstand zurückschicken
                                 game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
                                     try {
-                                        player4.getSession().sendMessage(new TextMessage("\"Bummerl:\"" + mapper.writeValueAsString(bummerl)));
+                                        player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl",bummerl))));
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -388,15 +390,21 @@ public class GameLogic {
                                 //Gamescorestand zurückschicken
                                 game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
                                     try {
-                                        player4.getSession().sendMessage(new TextMessage("\"Gamescore:\"" + mapper.writeValueAsString(gamescore)));
+                                        player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gamescore",gamescore))));
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
                                 }));
                             }
                         } else {
-                            player1.getSession().sendMessage(new TextMessage("\"newCard:\"" + getRandomCard(game.getAvailableCards(), false)));
+                            player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard",getRandomCard(game.getAvailableCards(), false)))));
                         }
+
+                    }
+                    //beim 4er Schnopsn überprüfen ob ansage durchgeht und Punkte vergeben
+                    else if (game.getGameType()==GameType._4ERSCHNOPSN){
+                        Call playedCall = game.getCurrentHighestCall();
+                        Player callPlayer;
 
                     }
 

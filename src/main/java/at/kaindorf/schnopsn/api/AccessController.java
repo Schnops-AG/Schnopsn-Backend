@@ -108,7 +108,7 @@ public class AccessController {
             System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
-                    player1.getSession().sendMessage(new TextMessage(logic.getAllCurrentPlayerNames(game)));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join",logic.getAllCurrentPlayerNames(game)))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -221,7 +221,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
             try {
-                player.getSession().sendMessage(new TextMessage("Game is over!"));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message","Game is over!"))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -241,8 +241,8 @@ public class AccessController {
                 player.setMyTurn(true);
             }
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"caller:\"" + player.isCaller()));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards",playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("caller",player.isCaller()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -281,9 +281,9 @@ public class AccessController {
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 2);
         for (Player player : playerCardMap.keySet()) {
             try {
-                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
-                player.getSession().sendMessage(new TextMessage("\"trump:\"" + realColor));
-                player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards",playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump",realColor))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -335,7 +335,7 @@ public class AccessController {
                     player1.setMyTurn(false);
                 }
                 try {
-                    player1.getSession().sendMessage(new TextMessage("finished with Calls"));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -355,8 +355,8 @@ public class AccessController {
 
         game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
             try {
-                player1.getSession().sendMessage(new TextMessage("\"highestCall:\"" + mapper.writeValueAsString(game.getCurrentHighestCall())));
-                player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player1.isMyTurn()));
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("highestCall", game.getCurrentHighestCall()))));
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
