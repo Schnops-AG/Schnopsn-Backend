@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.sql.Array;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Player {
@@ -14,17 +15,19 @@ public class Player {
     private boolean playsCall;
     private int playerNumber;
     private boolean admin;
+    private boolean myTurn;
 
     @JsonIgnore
     private WebSocketSession session;
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, WebSocketSession session) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, WebSocketSession session) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
         this.playsCall = playsCall;
         this.playerNumber = playerNumber;
         this.admin = admin;
+        this.myTurn = myTurn;
         this.session = session;
     }
 
@@ -33,13 +36,15 @@ public class Player {
 
     // region <getter, setter, toString>
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin) {
+
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
         this.playsCall = playsCall;
         this.playerNumber = playerNumber;
         this.admin = admin;
+        this.myTurn = myTurn;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class Player {
                 ", playsCall=" + playsCall +
                 ", playerNumber=" + playerNumber +
                 ", admin=" + admin +
-                ", session=" + session.getId() +
+                ", session=" + session +
                 '}';
     }
 
@@ -103,6 +108,14 @@ public class Player {
         this.admin = admin;
     }
 
+    public boolean isMyTurn() {
+        return myTurn;
+    }
+
+    public void setMyTurn(boolean myTurn) {
+        this.myTurn = myTurn;
+    }
+
     public WebSocketSession getSession() {
         return session;
     }
@@ -115,28 +128,13 @@ public class Player {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         Player player = (Player) o;
-
-        if (caller != player.caller) return false;
-        if (playsCall != player.playsCall) return false;
-        if (playerNumber != player.playerNumber) return false;
-        if (admin != player.admin) return false;
-        if (playerID != null ? !playerID.equals(player.playerID) : player.playerID != null) return false;
-        if (playerName != null ? !playerName.equals(player.playerName) : player.playerName != null) return false;
-        return session != null ? session.equals(player.session) : player.session == null;
+        return caller == player.caller && playsCall == player.playsCall && playerNumber == player.playerNumber && admin == player.admin && myTurn == player.myTurn && Objects.equals(playerID, player.playerID) && Objects.equals(playerName, player.playerName) && Objects.equals(session, player.session);
     }
 
     @Override
     public int hashCode() {
-        int result = playerID != null ? playerID.hashCode() : 0;
-        result = 31 * result + (playerName != null ? playerName.hashCode() : 0);
-        result = 31 * result + (caller ? 1 : 0);
-        result = 31 * result + (playsCall ? 1 : 0);
-        result = 31 * result + playerNumber;
-        result = 31 * result + (admin ? 1 : 0);
-        result = 31 * result + (session != null ? session.hashCode() : 0);
-        return result;
+        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, session);
     }
 
     // endregion

@@ -2,12 +2,16 @@ package at.kaindorf.schnopsn.api;
 
 import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
 import java.util.*;
+
+import org.json.*;
 
 
 @RestController
@@ -16,9 +20,8 @@ import java.util.*;
 public class AccessController {
 
     private final GameLogic logic = new GameLogic();
-    /*private final List<Game> activeGames = new ArrayList<>();
-    private final List<Player> activePlayers = new ArrayList<>();*/
     private GameStorage storage = GameStorage.getInstance();
+    private ObjectMapper mapper = new ObjectMapper();
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -27,7 +30,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body("Empty or invalid playerName");
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -50,9 +53,24 @@ public class AccessController {
             GameType realGameType = GameType.valueOf(gameType);
             Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             player.setCaller(true);
+            player.setMyTurn(true);
             player.setAdmin(true);
             Game newGame = logic.createGame(realGameType, player);
             storage.getActiveGames().add(newGame);
+
+            // Ab hier nur getestet
+            /*Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, false,null);
+            storage.getActivePlayers().add(newPlayer);
+            newGame.getTeams().get(1).getPlayers().add(newPlayer);
+
+            try {
+                String json = mapper.writeValueAsString(logic.giveOutCards(newGame,5).get(player));
+                System.out.println(json);
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }*/
+            //Ende Testung
+
             return ResponseEntity.status(200).body(newGame);
         } catch (NullPointerException e) {
             return ResponseEntity.status(400).body("Player does not exist!"); // no player found
@@ -104,7 +122,139 @@ public class AccessController {
         }
     }
 
-    @PostMapping(path = "/startRound")
+    @PostMapping(path = "/startRound2erSchnopsn")
+    public Object startRound2erSchnopsn(@RequestParam("gameID") String gameID) {
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+        UUID realGameID;
+
+        try {
+            realGameID = UUID.fromString(gameID);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body("Wrong color or wrong format of gameID"); // wrong format of gameID or wrong color
+        }
+
+        //Karten Methode 5 zurück
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+        playerCardMap = logic.giveOutCards(game, 5);
+        Card trumpCard = logic.getTrumpCard(game);
+        game.setCurrentTrump(trumpCard.getColor());
+
+        //Stichpunkte zurücksetzen
+        for (Team team : game.getTeams()) {
+            team.setCurrentScore(0);
+        }
+        game.getPlayedCards().clear();
+
+
+        for (Player player : playerCardMap.keySet()) {
+            try {
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trumpCard:\"" + mapper.writeValueAsString(trumpCard)));
+                player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (player.isMyTurn()) {
+                player.setMyTurn(false);
+            } else {
+                player.setMyTurn(true);
+            }
+        }
+        //neuen playsCall setzten
+
+        return ResponseEntity.status(400).body("Hurray!");
+    }
+
+
+    //Stichfunktion
+    @PostMapping(path = "/makeMoveByCall")
+    public Object makeMoveByCall(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("color") String color, @RequestParam("value") int cardValue) {
+
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+
+        if (color == null) {
+            return ResponseEntity.status(400).body("No color given!");
+        }
+
+        try {
+            Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+            Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+            Card card = logic.getCard(color, cardValue);
+            UUID winnerID = logic.makeRightMove(game, card, player);
+            logic.sendStingDataToPlayers(game, winnerID);
+            return ResponseEntity.status(200).body(GameLogic.findPlayer(storage.getActivePlayers(), winnerID + "") + "");
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(400).body("Invalid format of ID or invalid color.");
+        }
+    }
+
+    /*@PostMapping(path = "/endOfRound2erSchnopsn")
+    public Object endOfRound(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("looserPoints") String points) {
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Player winner = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        logic.endOfRound2erSchnopsn(winner, game, Integer.parseInt(points));
+        //Frontend fragen ob gewinner oder verlierer die runde beendet
+        game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
+            try {
+                player.getSession().sendMessage(new TextMessage("Round is over! winner: " + winner.getPlayerName()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+        return ResponseEntity.status(200).body(game);
+    }*/
+
+    @PostMapping(path = "/endOfGame2erSchnopsn")
+    public Object endOfGame(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
+            try {
+                player.getSession().sendMessage(new TextMessage("Game is over!"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+        storage.getActiveGames().remove(game);
+
+        return ResponseEntity.status(200).body("Game over!");
+    }
+
+    @PostMapping(path = "/getCards4erSchnopsn")
+    public Object getCards4erSchnopsn(@RequestParam("gameID") String gameID) {
+        //Serverintern: jeder bekommt seine 5 Karten -> geschickt werden nur die ersten 3; dann Trumpf die letzten 2
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
+        for (Player player : playerCardMap.keySet()) {
+            if (player.isCaller()) {
+                player.setMyTurn(true);
+            }
+            try {
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"caller:\"" + player.isCaller()));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        game.setCurrentHighestCall(Call.NORMAL);
+        game.setCurrentTrump(null);
+        game.getPlayedCards().clear();
+
+        return ResponseEntity.status(200).body("got cards successfully");
+    }
+
+    @PostMapping(path = "/callTrump")
     public Object startRound(@RequestParam("gameID") String gameID, @RequestParam("color") String color) {
 
         // if invalid gameID
@@ -126,21 +276,20 @@ public class AccessController {
             return ResponseEntity.status(400).body("Wrong color or wrong format of gameID"); // wrong format of gameID or wrong color
         }
 
-
-        //neuen Caller definieren
-        //Wenn 4erschnopsn dann caller sonst ned
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setCurrentTrump(realColor);
-        int oldCallerNumber = 0;
-        for (Team team : game.getTeams()) {
-            if (team.getPlayers().stream().filter(Player::isCaller).findFirst().orElse(null) != null) {
-                oldCallerNumber = team.getPlayers().stream().filter(Player::isCaller).findFirst().get().getPlayerNumber();
-                break;
+        Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 2);
+        for (Player player : playerCardMap.keySet()) {
+            try {
+                player.getSession().sendMessage(new TextMessage("\"cards:\"" + mapper.writeValueAsString(playerCardMap.get(player))));
+                player.getSession().sendMessage(new TextMessage("\"trump:\"" + realColor));
+                player.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player.isMyTurn()));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        final int finalOldCallerNumber = oldCallerNumber;
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
+        logic.defineCaller(game);
+
         return ResponseEntity.status(200).body("started round successfully");
     }
 
@@ -173,43 +322,47 @@ public class AccessController {
             return ResponseEntity.status(404).body("No player found");
         }
 
-        return ResponseEntity.status(200).body(logic.isCallHigher(GameLogic.findGame(storage.getActiveGames(), gameID), validCall, player));
-    }
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        game.setNumberOfCalledCalls(game.getNumberOfCalledCalls() + 1);
+        logic.isCallHigher(game, validCall, player);
 
-    @PostMapping(path = "/makeMoveByCall")
-    public Object makeMoveByCall(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("color") String color, @RequestParam("value") int cardValue) {
-
-        // if invalid playerID
-        if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        if (game.getNumberOfCalledCalls() == 4) {
+            //send Data
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isPlaysCall()) {
+                    player1.setMyTurn(true);
+                } else {
+                    player1.setMyTurn(false);
+                }
+                try {
+                    player1.getSession().sendMessage(new TextMessage("finished with Calls"));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        } else {
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isMyTurn()) {
+                    game.getTeams().stream().forEach(team1 -> team.getPlayers().stream().forEach(player2 -> {
+                        if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
+                            player2.setMyTurn(true);
+                        }
+                    }));
+                }
+            }));
+            player.setMyTurn(false);
         }
 
-        // if invalid gameID
-        if (gameID == null || gameID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
-        }
-
-        if (color == null) {
-            return ResponseEntity.status(400).body("No color given!");
-        }
-
-        try {
-            Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-            Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
-            Card card = logic.getCard(color, cardValue);
-            UUID winnerID = logic.makeRightMove(game, card, player);
-            if (winnerID == null) {
-                return ResponseEntity.status(200).body("valid move but not all players have played yet");
-            } else {
-                Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
-                logic.awardForPoints(winner, game);
-                return ResponseEntity.status(200).body(winner.getPlayerName());
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+            try {
+                player1.getSession().sendMessage(new TextMessage("\"highestCall:\"" + mapper.writeValueAsString(game.getCurrentHighestCall())));
+                player1.getSession().sendMessage(new TextMessage("\"myTurn:\"" + player1.isMyTurn()));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        }));
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("Invalid format of ID or invalid color.");
-        }
+
+        return ResponseEntity.status(200).body("");
     }
-
-
 }
