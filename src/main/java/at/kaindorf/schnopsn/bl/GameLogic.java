@@ -268,7 +268,7 @@ public class GameLogic {
 
     //give Crads for each player
     public Map<Player, List<Card>> giveOutCards(Game game, int anz) {
-        game.setAvailableCards(allCards);
+        game.setAvailableCards(new ArrayList<>(allCards));
         Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
         for (Team team : game.getTeams()) {
             team.getPlayers().forEach(player -> {

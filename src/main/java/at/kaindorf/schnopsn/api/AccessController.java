@@ -137,8 +137,10 @@ public class AccessController {
 
         //Karten Methode 5 zurück
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        Map<Player, List<Card>> playerCardMap = new LinkedHashMap<>();
+
+        Map<Player, List<Card>> playerCardMap;
         playerCardMap = logic.giveOutCards(game, 5);
+
         Card trumpCard = logic.getTrumpCard(game);
         game.setCurrentTrump(trumpCard.getColor());
 
@@ -151,6 +153,7 @@ public class AccessController {
         
         for (Player player : playerCardMap.keySet()) {
             try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("forward", "./play"))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trumpCard", trumpCard))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
