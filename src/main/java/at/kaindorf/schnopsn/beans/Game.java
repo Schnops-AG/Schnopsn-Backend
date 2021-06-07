@@ -16,8 +16,9 @@ public class Game {
     //Stapel (welche Karten man noch ziehen kann)
     private List<Card> availableCards;
     private int numberOfCalledCalls;
+    private int numberOfStingsPerRound;
 
-    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls) {
+    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls, int numberOfStingsPerRound) {
         this.gameID = gameID;
         this.gameType = gameType;
         this.inviteLink = inviteLink;
@@ -28,6 +29,10 @@ public class Game {
         this.playedCards = playedCards;
         this.availableCards = availableCards;
         this.numberOfCalledCalls = numberOfCalledCalls;
+        this.numberOfStingsPerRound = numberOfStingsPerRound;
+    }
+
+    public Game() {
     }
 
     public UUID getGameID() {
@@ -110,16 +115,24 @@ public class Game {
         this.numberOfCalledCalls = numberOfCalledCalls;
     }
 
+    public int getNumberOfStingsPerRound() {
+        return numberOfStingsPerRound;
+    }
+
+    public void setNumberOfStingsPerRound(int numberOfStingsPerRound) {
+        this.numberOfStingsPerRound = numberOfStingsPerRound;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Game game = (Game) o;
-        return maxNumberOfPlayers == game.maxNumberOfPlayers && numberOfCalledCalls == game.numberOfCalledCalls && Objects.equals(gameID, game.gameID) && gameType == game.gameType && Objects.equals(inviteLink, game.inviteLink) && currentTrump == game.currentTrump && Objects.equals(teams, game.teams) && currentHighestCall == game.currentHighestCall && Objects.equals(playedCards, game.playedCards) && Objects.equals(availableCards, game.availableCards);
+        return maxNumberOfPlayers == game.maxNumberOfPlayers && numberOfCalledCalls == game.numberOfCalledCalls && numberOfStingsPerRound == game.numberOfStingsPerRound && Objects.equals(gameID, game.gameID) && gameType == game.gameType && Objects.equals(inviteLink, game.inviteLink) && currentTrump == game.currentTrump && Objects.equals(teams, game.teams) && currentHighestCall == game.currentHighestCall && Objects.equals(playedCards, game.playedCards) && Objects.equals(availableCards, game.availableCards);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(gameID, gameType, inviteLink, currentTrump, maxNumberOfPlayers, teams, currentHighestCall, playedCards, availableCards, numberOfCalledCalls);
+        return Objects.hash(gameID, gameType, inviteLink, currentTrump, maxNumberOfPlayers, teams, currentHighestCall, playedCards, availableCards, numberOfCalledCalls, numberOfStingsPerRound);
     }
 }

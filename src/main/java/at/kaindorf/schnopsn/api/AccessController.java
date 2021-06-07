@@ -2,7 +2,6 @@ package at.kaindorf.schnopsn.api;
 
 import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +10,6 @@ import org.springframework.web.socket.TextMessage;
 import java.io.IOException;
 import java.util.*;
 
-import org.json.*;
 
 
 @RestController
@@ -22,6 +20,9 @@ public class AccessController {
     private final GameLogic logic = new GameLogic();
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
+    //TODO setAktive: if Call e.g. BETTLER then only three players
+    //TODO: KONTRA myTurn first on caller true
+    //TODO: check three cases of SCHNAPSER
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -30,7 +31,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body("Empty or invalid playerName");
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0,null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -59,13 +60,13 @@ public class AccessController {
             storage.getActiveGames().add(newGame);
 
             // Ab hier nur getestet
-            /*Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, false,null);
+           /* Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, false,0, null);
             storage.getActivePlayers().add(newPlayer);
             newGame.getTeams().get(1).getPlayers().add(newPlayer);
 
             try {
                 String json = mapper.writeValueAsString(logic.giveOutCards(newGame,5).get(player));
-                System.out.println(json);
+                System.out.println((mapper.writeValueAsString(new Message("cards", logic.giveOutCards(newGame,5).get(player)))));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }*/
@@ -203,23 +204,7 @@ public class AccessController {
         }
     }
 
-    /*@PostMapping(path = "/endOfRound2erSchnopsn")
-    public Object endOfRound(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID, @RequestParam("looserPoints") String points) {
-        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        Player winner = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
-        logic.endOfRound2erSchnopsn(winner, game, Integer.parseInt(points));
-        //Frontend fragen ob gewinner oder verlierer die runde beendet
-        game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
-            try {
-                player.getSession().sendMessage(new TextMessage("Round is over! winner: " + winner.getPlayerName()));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }));
-        return ResponseEntity.status(200).body(game);
-    }*/
-
-    @PostMapping(path = "/endOfGame2erSchnopsn")
+    @PostMapping(path = "/endOfGame")
     public Object endOfGame(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
@@ -240,6 +225,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
         for (Player player : playerCardMap.keySet()) {
+            player.setNumberOfStingsPerRound(0);
             if (player.isCaller()) {
                 player.setMyTurn(true);
             }
@@ -253,6 +239,8 @@ public class AccessController {
         game.setCurrentHighestCall(Call.NORMAL);
         game.setCurrentTrump(null);
         game.getPlayedCards().clear();
+        game.setNumberOfCalledCalls(0);
+        game.setNumberOfStingsPerRound(0);
 
         return ResponseEntity.status(200).body("got cards successfully");
     }
@@ -364,7 +352,6 @@ public class AccessController {
                 e.printStackTrace();
             }
         }));
-
 
         return ResponseEntity.status(200).body("");
     }

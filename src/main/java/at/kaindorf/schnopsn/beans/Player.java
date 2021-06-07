@@ -16,11 +16,12 @@ public class Player {
     private int playerNumber;
     private boolean admin;
     private boolean myTurn;
+    private int numberOfStingsPerRound;
 
     @JsonIgnore
     private WebSocketSession session;
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, WebSocketSession session) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, WebSocketSession session) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
@@ -28,16 +29,14 @@ public class Player {
         this.playerNumber = playerNumber;
         this.admin = admin;
         this.myTurn = myTurn;
+        this.numberOfStingsPerRound = numberOfStingsPerRound;
         this.session = session;
     }
 
     public Player() {
     }
 
-    // region <getter, setter, toString>
-
-
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
@@ -45,19 +44,7 @@ public class Player {
         this.playerNumber = playerNumber;
         this.admin = admin;
         this.myTurn = myTurn;
-    }
-
-    @Override
-    public String toString() {
-        return "Player{" +
-                "playerID=" + playerID +
-                ", playerName='" + playerName + '\'' +
-                ", caller=" + caller +
-                ", playsCall=" + playsCall +
-                ", playerNumber=" + playerNumber +
-                ", admin=" + admin +
-                ", session=" + session +
-                '}';
+        this.numberOfStingsPerRound = numberOfStingsPerRound;
     }
 
     public UUID getPlayerID() {
@@ -116,6 +103,14 @@ public class Player {
         this.myTurn = myTurn;
     }
 
+    public int getNumberOfStingsPerRound() {
+        return numberOfStingsPerRound;
+    }
+
+    public void setNumberOfStingsPerRound(int numberOfStingsPerRound) {
+        this.numberOfStingsPerRound = numberOfStingsPerRound;
+    }
+
     public WebSocketSession getSession() {
         return session;
     }
@@ -129,13 +124,11 @@ public class Player {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Player player = (Player) o;
-        return caller == player.caller && playsCall == player.playsCall && playerNumber == player.playerNumber && admin == player.admin && myTurn == player.myTurn && Objects.equals(playerID, player.playerID) && Objects.equals(playerName, player.playerName) && Objects.equals(session, player.session);
+        return caller == player.caller && playsCall == player.playsCall && playerNumber == player.playerNumber && admin == player.admin && myTurn == player.myTurn && numberOfStingsPerRound == player.numberOfStingsPerRound && Objects.equals(playerID, player.playerID) && Objects.equals(playerName, player.playerName) && Objects.equals(session, player.session);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, session);
+        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, numberOfStingsPerRound, session);
     }
-
-    // endregion
 }
