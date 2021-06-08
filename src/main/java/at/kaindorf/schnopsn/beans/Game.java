@@ -135,4 +135,21 @@ public class Game {
     public int hashCode() {
         return Objects.hash(gameID, gameType, inviteLink, currentTrump, maxNumberOfPlayers, teams, currentHighestCall, playedCards, availableCards, numberOfCalledCalls, numberOfStingsPerRound);
     }
+
+    @Override
+    public String toString() {
+        return "Game{" +
+                "gameID=" + gameID +
+                ", gameType=" + gameType +
+                ", inviteLink=" + inviteLink +
+                ", currentTrump=" + currentTrump +
+                ", maxNumberOfPlayers=" + maxNumberOfPlayers +
+                ", teams=" + teams +
+                ", currentHighestCall=" + currentHighestCall +
+                ", playedCards=" + playedCards +
+                ", availableCards=" + availableCards +
+                ", numberOfCalledCalls=" + numberOfCalledCalls +
+                ", numberOfStingsPerRound=" + numberOfStingsPerRound +
+                '}';
+    }
 }

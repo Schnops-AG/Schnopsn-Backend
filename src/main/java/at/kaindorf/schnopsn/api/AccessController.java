@@ -59,6 +59,7 @@ public class AccessController {
             player.setCaller(true);
             player.setMyTurn(true);
             player.setAdmin(true);
+            player.setPlayerNumber(1);
             Game newGame = logic.createGame(realGameType, player);
             storage.getActiveGames().add(newGame);
 
@@ -164,11 +165,11 @@ public class AccessController {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (player.isMyTurn()) {
-                player.setMyTurn(false);
-            } else {
-                player.setMyTurn(true);
-            }
+//            if (player.isMyTurn()) {
+//                player.setMyTurn(false);
+//            } else {
+//                player.setMyTurn(true);
+//            }
         }
         //neuen playsCall setzten
 

@@ -130,25 +130,54 @@ public class Player {
         this.session = session;
     }
 
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Player player = (Player) o;
-        return caller == player.caller &&
-                playsCall == player.playsCall &&
-                playerNumber == player.playerNumber &&
-                admin == player.admin &&
-                myTurn == player.myTurn &&
-                numberOfStingsPerRound == player.numberOfStingsPerRound &&
-                active == player.active &&
-                playerID.equals(player.playerID) &&
-                playerName.equals(player.playerName) &&
-                Objects.equals(session, player.session);
+
+        if (caller != player.caller) return false;
+        if (playsCall != player.playsCall) return false;
+        if (playerNumber != player.playerNumber) return false;
+        if (admin != player.admin) return false;
+        if (myTurn != player.myTurn) return false;
+        if (numberOfStingsPerRound != player.numberOfStingsPerRound) return false;
+        if (active != player.active) return false;
+        if (playerID != null ? !playerID.equals(player.playerID) : player.playerID != null) return false;
+        if (playerName != null ? !playerName.equals(player.playerName) : player.playerName != null) return false;
+        return session != null ? session.equals(player.session) : player.session == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, numberOfStingsPerRound, active, session);
+        int result = playerID != null ? playerID.hashCode() : 0;
+        result = 31 * result + (playerName != null ? playerName.hashCode() : 0);
+        result = 31 * result + (caller ? 1 : 0);
+        result = 31 * result + (playsCall ? 1 : 0);
+        result = 31 * result + playerNumber;
+        result = 31 * result + (admin ? 1 : 0);
+        result = 31 * result + (myTurn ? 1 : 0);
+        result = 31 * result + numberOfStingsPerRound;
+        result = 31 * result + (active ? 1 : 0);
+        result = 31 * result + (session != null ? session.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "playerID=" + playerID +
+                ", playerName='" + playerName + '\'' +
+                ", caller=" + caller +
+                ", playsCall=" + playsCall +
+                ", playerNumber=" + playerNumber +
+                ", admin=" + admin +
+                ", myTurn=" + myTurn +
+                ", numberOfStingsPerRound=" + numberOfStingsPerRound +
+                ", active=" + active +
+                ", session=" + session +
+                '}';
     }
 }

@@ -70,5 +70,16 @@ public class Team {
         return Objects.hash(currentGameScore, currentScore, currentBummerl, players);
     }
 
-// endregion
+    @Override
+    public String toString() {
+        return "Team{" +
+                "currentGameScore=" + currentGameScore +
+                ", currentScore=" + currentScore +
+                ", currentBummerl=" + currentBummerl +
+                ", players=" + players +
+                '}';
+    }
+
+
+    // endregion
 }

@@ -156,9 +156,17 @@ public class GameLogic {
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump,Game game) {
         List<Card> playCards = new ArrayList<>();
 
+        System.out.println(playMap);
+
         for (Player player : playMap.keySet()) {
+            System.out.println(player);
+            System.out.println(playMap.get(player));
             playCards.add(playMap.get(player));
         }
+
+
+        System.out.println(playCards);
+
         //If Zehnergang dann Ass has value 1
         if(game.getCurrentHighestCall()==Call.ZEHNERGANG){
             playCards.stream().forEach(card -> {
@@ -168,7 +176,7 @@ public class GameLogic {
             });
         }
 
-        Color firstColor = playCards.get(0).getColor();
+        Color firstColor = playCards.get(0).getColor(); // null pointer exception !!!! TODO
 
         System.out.println(playCards);
         int count = 0;
@@ -336,6 +344,8 @@ public class GameLogic {
         List<Card> cards = game.getPlayedCards().values().stream().collect(Collectors.toList());
         ObjectMapper mapper = new ObjectMapper();
 
+        System.out.println(game);
+
         if (winnerID == null) {
             //Sends a message to all players, about who will play next
             // Spieler der gerade dran war
@@ -351,7 +361,7 @@ public class GameLogic {
 
             for (Team team:game.getTeams()) {
                 nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
-                if(turnPlayer!=null){
+                if(nextPlayer!=null){
                     break;
                 }
             }
@@ -362,7 +372,7 @@ public class GameLogic {
                     if(!nextPlayer.isActive()){
                         for (Team team:game.getTeams()) {
                             nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
-                            if(turnPlayer!=null){
+                            if(nextPlayer!=null){
                                 break;
                             }
                         }
@@ -370,10 +380,8 @@ public class GameLogic {
                     break;
             }
             final Player realNextPlayer = nextPlayer;
-
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
-
                     if (player1.getPlayerNumber() == realNextPlayer.getPlayerNumber()) {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
