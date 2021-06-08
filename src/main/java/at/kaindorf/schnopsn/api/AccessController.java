@@ -31,7 +31,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body("Empty or invalid playerName");
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0,null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0,true,null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -209,6 +209,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
             try {
+                player.setActive(true);
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message","Game is over!"))));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -225,6 +226,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
         for (Player player : playerCardMap.keySet()) {
+            player.setActive(true);
             player.setNumberOfStingsPerRound(0);
             if (player.isCaller()) {
                 player.setMyTurn(true);
@@ -322,6 +324,9 @@ public class AccessController {
             game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
                 if (player1.isPlaysCall()) {
                     player1.setMyTurn(true);
+                    if(game.getCurrentHighestCall()==Call.BETTLER|| game.getCurrentHighestCall()==Call.ASSENBETTLER || game.getCurrentHighestCall()==Call.PLAUDERER){
+                        game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(true);
+                    }
                 } else {
                     player1.setMyTurn(false);
                 }

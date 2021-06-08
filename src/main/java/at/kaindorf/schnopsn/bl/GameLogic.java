@@ -17,6 +17,7 @@ public class GameLogic {
 
     private List<Card> allCards = new ArrayList<>();
     private GameStorage storage = GameStorage.getInstance();
+    //TODO 2erSchnopsn zuadrahen
 
     public GameLogic() {
         try {
@@ -91,7 +92,6 @@ public class GameLogic {
     }
 
     public static int getCurrentNumberOfPlayers(Game game) {
-
         return game.getTeams().get(0).getPlayers().size() + game.getTeams().get(1).getPlayers().size();
     }
 
@@ -194,7 +194,6 @@ public class GameLogic {
 
         for (Player player : playMap.keySet()) {
             if (playMap.get(player) == playCards.get(0)) {
-                //TODO ZwischenMethode um zu schauen, ob die Runde noch gültig ist.
                 return player.getPlayerID();
             }
         }
@@ -339,15 +338,41 @@ public class GameLogic {
 
         if (winnerID == null) {
             //Sends a message to all players, about who will play next
+            // Spieler der gerade dran war
+            Player turnPlayer = null;
+            Player nextPlayer=null;
+            for(Team team: game.getTeams()) {
+                turnPlayer = team.getPlayers().stream().filter(player -> player.isMyTurn()).findFirst().get();
+            }
+            final Player finalTurnPlayer = turnPlayer;
+
+            for (Team team:game.getTeams()) {
+                nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+            }
+
+            final Player finalNextPlayer = nextPlayer;
+            switch(game.getCurrentHighestCall()){
+                case BETTLER,ASSENBETTLER,PLAUDERER:
+                    if(!nextPlayer.isActive()){
+                        for (Team team:game.getTeams()) {
+                            nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+                        }
+                    }
+                    break;
+            }
+            final Player realNextPlayer = nextPlayer;
+
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
-                    if (player1.getPlayerNumber() == player1.getPlayerNumber() % game.getMaxNumberOfPlayers() + 1) {
+
+                    if (player1.getPlayerNumber() == realNextPlayer.getPlayerNumber()) {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                     } else {
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", false))));
                     }
+
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -355,6 +380,7 @@ public class GameLogic {
             }));
         } else {
             Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
+            game.getPlayedCards().clear();
 
             int points = 0;
             for (Card card1 : cards) {

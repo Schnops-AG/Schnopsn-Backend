@@ -17,11 +17,12 @@ public class Player {
     private boolean admin;
     private boolean myTurn;
     private int numberOfStingsPerRound;
+    private boolean active;
 
     @JsonIgnore
     private WebSocketSession session;
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, WebSocketSession session) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, boolean active, WebSocketSession session) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
@@ -30,13 +31,14 @@ public class Player {
         this.admin = admin;
         this.myTurn = myTurn;
         this.numberOfStingsPerRound = numberOfStingsPerRound;
+        this.active = active;
         this.session = session;
     }
 
     public Player() {
     }
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, boolean active) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
@@ -45,6 +47,7 @@ public class Player {
         this.admin = admin;
         this.myTurn = myTurn;
         this.numberOfStingsPerRound = numberOfStingsPerRound;
+        this.active = active;
     }
 
     public UUID getPlayerID() {
@@ -111,6 +114,14 @@ public class Player {
         this.numberOfStingsPerRound = numberOfStingsPerRound;
     }
 
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     public WebSocketSession getSession() {
         return session;
     }
@@ -124,11 +135,20 @@ public class Player {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Player player = (Player) o;
-        return caller == player.caller && playsCall == player.playsCall && playerNumber == player.playerNumber && admin == player.admin && myTurn == player.myTurn && numberOfStingsPerRound == player.numberOfStingsPerRound && Objects.equals(playerID, player.playerID) && Objects.equals(playerName, player.playerName) && Objects.equals(session, player.session);
+        return caller == player.caller &&
+                playsCall == player.playsCall &&
+                playerNumber == player.playerNumber &&
+                admin == player.admin &&
+                myTurn == player.myTurn &&
+                numberOfStingsPerRound == player.numberOfStingsPerRound &&
+                active == player.active &&
+                playerID.equals(player.playerID) &&
+                playerName.equals(player.playerName) &&
+                Objects.equals(session, player.session);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, numberOfStingsPerRound, session);
+        return Objects.hash(playerID, playerName, caller, playsCall, playerNumber, admin, myTurn, numberOfStingsPerRound, active, session);
     }
 }
