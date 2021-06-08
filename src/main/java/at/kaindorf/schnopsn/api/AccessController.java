@@ -20,9 +20,12 @@ public class AccessController {
     private final GameLogic logic = new GameLogic();
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
-    //TODO setAktive: if Call e.g. BETTLER then only three players
-    //TODO: KONTRA myTurn first on caller true
+    //TODO setAktive: if Call e.g. BETTLER then only three players //finished
+    //TODO: KONTRA myTurn first on caller true //finished
     //TODO: check three cases of SCHNAPSER
+    //TODO: zudrehen 2er Schnopsn
+    //TODO: färbelpflicht, Stechpflicht einbauen
+    //TODO: Frontend besprechen: Farbenringerl, available Calls
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -281,7 +284,6 @@ public class AccessController {
                 e.printStackTrace();
             }
         }
-        logic.defineCaller(game);
 
         return ResponseEntity.status(200).body("started round successfully");
     }
@@ -324,9 +326,21 @@ public class AccessController {
             game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
                 if (player1.isPlaysCall()) {
                     player1.setMyTurn(true);
-                    if(game.getCurrentHighestCall()==Call.BETTLER|| game.getCurrentHighestCall()==Call.ASSENBETTLER || game.getCurrentHighestCall()==Call.PLAUDERER){
-                        game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(true);
+
+                    switch(game.getCurrentHighestCall()){
+                        case BETTLER,ASSENBETTLER,PLAUDERER:
+                            game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
+                            break;
+                        case KONTRABAUER,KONTRASCHNAPSER:
+                            player1.setMyTurn(false);
+                            game.getTeams().stream().forEach(team2 -> team.getPlayers().stream().forEach(player2 ->{
+                                if(player2.isCaller()){
+                                    player2.setMyTurn(true);
+                                }
+                            }));
+                            break;
                     }
+
                 } else {
                     player1.setMyTurn(false);
                 }
@@ -336,6 +350,8 @@ public class AccessController {
                     e.printStackTrace();
                 }
             }));
+            //deshalb weil wir den aktuellen hier noch brauchen
+            logic.defineCaller(game);
         } else {
             game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
                 if (player1.isMyTurn()) {

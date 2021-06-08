@@ -343,11 +343,17 @@ public class GameLogic {
             Player nextPlayer=null;
             for(Team team: game.getTeams()) {
                 turnPlayer = team.getPlayers().stream().filter(player -> player.isMyTurn()).findFirst().get();
+                if(turnPlayer!=null){
+                    break;
+                }
             }
             final Player finalTurnPlayer = turnPlayer;
 
             for (Team team:game.getTeams()) {
                 nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+                if(turnPlayer!=null){
+                    break;
+                }
             }
 
             final Player finalNextPlayer = nextPlayer;
@@ -356,6 +362,9 @@ public class GameLogic {
                     if(!nextPlayer.isActive()){
                         for (Team team:game.getTeams()) {
                             nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+                            if(turnPlayer!=null){
+                                break;
+                            }
                         }
                     }
                     break;
@@ -388,6 +397,7 @@ public class GameLogic {
             }
             for (Player player1 : game.getPlayedCards().keySet()) {
                 try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards",cards))));
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
 
@@ -399,10 +409,13 @@ public class GameLogic {
                         game.getTeams().get(player1.getPlayerNumber() % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() + points);
 
                     } else {
+
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("winner", winner.getPlayerName()))));
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                     }
+
+
 
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
