@@ -342,7 +342,7 @@ public class GameLogic {
             Player turnPlayer = null;
             Player nextPlayer=null;
             for(Team team: game.getTeams()) {
-                turnPlayer = team.getPlayers().stream().filter(player -> player.isMyTurn()).findFirst().get();
+                turnPlayer = team.getPlayers().stream().filter(player -> player.isMyTurn()).findFirst().orElse(null);
                 if(turnPlayer!=null){
                     break;
                 }
@@ -350,7 +350,7 @@ public class GameLogic {
             final Player finalTurnPlayer = turnPlayer;
 
             for (Team team:game.getTeams()) {
-                nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+                nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
                 if(turnPlayer!=null){
                     break;
                 }
@@ -361,7 +361,7 @@ public class GameLogic {
                 case BETTLER,ASSENBETTLER,PLAUDERER:
                     if(!nextPlayer.isActive()){
                         for (Team team:game.getTeams()) {
-                            nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().get();
+                            nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
                             if(turnPlayer!=null){
                                 break;
                             }
@@ -441,7 +441,7 @@ public class GameLogic {
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
-            calledPlayer = team.getPlayers().stream().filter(player1 -> player1.isPlaysCall()).findFirst().get();
+            calledPlayer = team.getPlayers().stream().filter(player1 -> player1.isPlaysCall()).findFirst().get(); // TODO
         }
         //makeRightMove
         //check if succeeds
