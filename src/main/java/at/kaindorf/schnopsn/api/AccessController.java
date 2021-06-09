@@ -26,6 +26,7 @@ public class AccessController {
     //TODO: zudrehen 2er Schnopsn
     //TODO: färbelpflicht, Stechpflicht einbauen
     //TODO: Frontend besprechen: Farbenringerl, available Calls
+    //TODO: handkarten in sendstingData anschauen
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -145,6 +146,7 @@ public class AccessController {
 
         Map<Player, List<Card>> playerCardMap;
         playerCardMap = logic.giveOutCards(game, 5);
+        game.setPlayerCardMap(playerCardMap);
 
         Card trumpCard = logic.getTrumpCard(game);
         game.setCurrentTrump(trumpCard.getColor());
@@ -174,6 +176,23 @@ public class AccessController {
         //neuen playsCall setzten
 
         return ResponseEntity.status(200).body("Hurray!");
+    }
+
+    @PostMapping(path = "/zudrehen")
+    public Object zudrehen(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+
+        return null;
     }
 
 
@@ -229,7 +248,8 @@ public class AccessController {
         //Serverintern: jeder bekommt seine 5 Karten -> geschickt werden nur die ersten 3; dann Trumpf die letzten 2
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
-        for (Player player : playerCardMap.keySet()) {
+        game.setPlayerCardMap(playerCardMap);
+        for (Player player : game.getPlayerCardMap().keySet()) {
             player.setActive(true);
             player.setNumberOfStingsPerRound(0);
             if (player.isCaller()) {
@@ -242,6 +262,7 @@ public class AccessController {
                 e.printStackTrace();
             }
         }
+
         game.setCurrentHighestCall(Call.NORMAL);
         game.setCurrentTrump(null);
         game.getPlayedCards().clear();
@@ -277,6 +298,7 @@ public class AccessController {
         game.setCurrentTrump(realColor);
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 2);
         for (Player player : playerCardMap.keySet()) {
+            game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards",playerCardMap.get(player)))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump",realColor))));
@@ -321,50 +343,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setNumberOfCalledCalls(game.getNumberOfCalledCalls() + 1);
         logic.isCallHigher(game, validCall, player);
-
-        if (game.getNumberOfCalledCalls() == 4) {
-            //send Data
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
-                if (player1.isPlaysCall()) {
-                    player1.setMyTurn(true);
-
-                    switch(game.getCurrentHighestCall()){
-                        case BETTLER,ASSENBETTLER,PLAUDERER:
-                            game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
-                            break;
-                        case KONTRABAUER,KONTRASCHNAPSER:
-                            player1.setMyTurn(false);
-                            game.getTeams().stream().forEach(team2 -> team.getPlayers().stream().forEach(player2 ->{
-                                if(player2.isCaller()){
-                                    player2.setMyTurn(true);
-                                }
-                            }));
-                            break;
-                    }
-
-                } else {
-                    player1.setMyTurn(false);
-                }
-                try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }));
-            //deshalb weil wir den aktuellen hier noch brauchen
-            logic.defineCaller(game);
-        } else {
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
-                if (player1.isMyTurn()) {
-                    game.getTeams().stream().forEach(team1 -> team.getPlayers().stream().forEach(player2 -> {
-                        if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
-                            player2.setMyTurn(true);
-                        }
-                    }));
-                }
-            }));
-            player.setMyTurn(false);
-        }
+        logic.callPeriod(game,mapper,player);
 
         game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
             try {
@@ -377,4 +356,5 @@ public class AccessController {
 
         return ResponseEntity.status(200).body("");
     }
+
 }

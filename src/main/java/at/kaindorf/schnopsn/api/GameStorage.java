@@ -11,7 +11,7 @@ public class GameStorage {
     private final List<Player> activePlayers = new ArrayList<>();
     private static GameStorage instance;
 
-    public GameStorage(){}
+    private GameStorage(){}
 
     public static GameStorage getInstance(){
         if (GameStorage.instance == null){

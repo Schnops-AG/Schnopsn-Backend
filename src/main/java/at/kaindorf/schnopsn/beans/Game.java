@@ -17,8 +17,10 @@ public class Game {
     private List<Card> availableCards;
     private int numberOfCalledCalls;
     private int numberOfStingsPerRound;
+    //Karten auf der Hand pro Spieler
+    private Map<Player,List<Card>> playerCardMap;
 
-    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls, int numberOfStingsPerRound) {
+    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls, int numberOfStingsPerRound, Map<Player, List<Card>> playerCardMap) {
         this.gameID = gameID;
         this.gameType = gameType;
         this.inviteLink = inviteLink;
@@ -30,6 +32,7 @@ public class Game {
         this.availableCards = availableCards;
         this.numberOfCalledCalls = numberOfCalledCalls;
         this.numberOfStingsPerRound = numberOfStingsPerRound;
+        this.playerCardMap = playerCardMap;
     }
 
     public Game() {
@@ -121,6 +124,14 @@ public class Game {
 
     public void setNumberOfStingsPerRound(int numberOfStingsPerRound) {
         this.numberOfStingsPerRound = numberOfStingsPerRound;
+    }
+
+    public Map<Player, List<Card>> getPlayerCardMap() {
+        return playerCardMap;
+    }
+
+    public void setPlayerCardMap(Map<Player, List<Card>> playerCardMap) {
+        this.playerCardMap = playerCardMap;
     }
 
     @Override

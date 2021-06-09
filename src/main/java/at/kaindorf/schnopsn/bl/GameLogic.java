@@ -59,9 +59,9 @@ public class GameLogic {
         teams.add(new Team(0, 0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0,new LinkedHashMap<Player,List<Card>>());
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0,new LinkedHashMap<Player,List<Card>>());
         }
         player.setPlayerNumber(1);
         game.setInviteLink(generateInviteLink(game));
@@ -126,6 +126,7 @@ public class GameLogic {
             case BETTLER, ASSENBETTLER, PLAUDERER:
                 if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() - 1 && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
                     game.getPlayedCards().put(player, card);
+                    game.getPlayerCardMap().get(player).remove(card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
                     if (trumpNeeded(game.getCurrentHighestCall())) {
@@ -139,6 +140,7 @@ public class GameLogic {
             default:
                 if (game.getPlayedCards().size() < game.getMaxNumberOfPlayers() && game.getPlayedCards().keySet().stream().filter(player1 -> player1.getPlayerID() == player.getPlayerID()).findFirst().orElse(null) == null) {
                     game.getPlayedCards().put(player, card);
+                    game.getPlayerCardMap().get(player).remove(card);
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
                     if (trumpNeeded(game.getCurrentHighestCall())) {
@@ -338,7 +340,7 @@ public class GameLogic {
         }
         return card;
     }
-
+    //handkarten anschuen
     //sendData toPlayers after one has played out a card
     public void sendStingDataToPlayers(Game game, UUID winnerID) {
         List<Card> cards = game.getPlayedCards().values().stream().collect(Collectors.toList());
@@ -440,7 +442,6 @@ public class GameLogic {
                 sendAdditionalData4erSchnopsn(game, mapper, winner);
             }
 
-
         }
     }
 
@@ -532,8 +533,12 @@ public class GameLogic {
         } else {
             try {
                 //Get new Card; winner gets the new card before the looser
-                winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", getRandomCard(game.getAvailableCards(), false)))));
-                game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", getRandomCard(game.getAvailableCards(), false)))));
+                Card card = getRandomCard(game.getAvailableCards(),false);
+                winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                game.getPlayerCardMap().get(winner).add(card);
+                card = getRandomCard(game.getAvailableCards(),false);
+                game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                game.getPlayerCardMap().get(game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getPlayers().get(0)).add(card);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -547,6 +552,52 @@ public class GameLogic {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void callPeriod(Game game, ObjectMapper mapper, Player player){
+        if (game.getNumberOfCalledCalls() == 4) {
+            //send Data
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isPlaysCall()) {
+                    player1.setMyTurn(true);
+
+                    switch(game.getCurrentHighestCall()){
+                        case BETTLER,ASSENBETTLER,PLAUDERER:
+                            game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
+                            break;
+                        case KONTRABAUER,KONTRASCHNAPSER:
+                            player1.setMyTurn(false);
+                            game.getTeams().stream().forEach(team2 -> team.getPlayers().stream().forEach(player2 ->{
+                                if(player2.isCaller()){
+                                    player2.setMyTurn(true);
+                                }
+                            }));
+                            break;
+                    }
+
+                } else {
+                    player1.setMyTurn(false);
+                }
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+            //deshalb weil wir den aktuellen hier noch brauchen
+            defineCaller(game);
+        } else {
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+                if (player1.isMyTurn()) {
+                    game.getTeams().stream().forEach(team1 -> team.getPlayers().stream().forEach(player2 -> {
+                        if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
+                            player2.setMyTurn(true);
+                        }
+                    }));
+                }
+            }));
+            player.setMyTurn(false);
         }
     }
 }

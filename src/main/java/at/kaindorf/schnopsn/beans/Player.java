@@ -5,6 +5,7 @@ import lombok.Data;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.sql.Array;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -122,6 +123,7 @@ public class Player {
         this.active = active;
     }
 
+
     public WebSocketSession getSession() {
         return session;
     }
@@ -129,7 +131,6 @@ public class Player {
     public void setSession(WebSocketSession session) {
         this.session = session;
     }
-
 
     @Override
     public boolean equals(Object o) {
