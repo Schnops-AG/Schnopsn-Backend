@@ -167,7 +167,7 @@ public class GameLogic {
 
         System.out.println(playCards);
 
-        //If Zehnergang dann Ass has value 1
+        //If Zehnergang then Ass has value 1
         if(game.getCurrentHighestCall()==Call.ZEHNERGANG){
             playCards.stream().forEach(card -> {
                 if(card.getValue()==11){
