@@ -59,9 +59,9 @@ public class GameLogic {
         teams.add(new Team(0, 0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0,new LinkedHashMap<Player,List<Card>>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>());
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<Player, Card>(), allCards, 0, 0,new LinkedHashMap<Player,List<Card>>());
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>());
         }
         player.setPlayerNumber(1);
         game.setInviteLink(generateInviteLink(game));
@@ -97,7 +97,7 @@ public class GameLogic {
 
     public Card getCard(String color, int value) {
         Color realColor = Color.valueOf(color.toUpperCase());
-        return allCards.stream().filter(card -> card.getColor().equals(realColor) && card.getValue() == value).findFirst().get();
+        return allCards.stream().filter(card -> card.getColor().equals(realColor) && card.getValue() == value).findFirst().orElse(null);
     }
 
     //überprüft ob eine Ansage höher als die aktuell höchste Ansage in einem Spiel ist
@@ -171,19 +171,19 @@ public class GameLogic {
 
         //If Zehnergang then Ass has value 1
         if(game.getCurrentHighestCall()==Call.ZEHNERGANG){
-            playCards.stream().forEach(card -> {
+            playCards.forEach(card -> {
                 if(card.getValue()==11){
                     card.setValue(1);
                 }
             });
         }
 
-        Color firstColor = playCards.get(0).getColor(); // null pointer exception !!!! TODO
+        Color firstColor = playCards.get(0).getColor();
 
         System.out.println(playCards);
         int count = 0;
         while (playCards.size() > 1) {
-            Card temp = playCards.get(count);
+            Card temp = playCards.get(count); // TODO - Bug: IndexOutOfBoundsException  Index 2 out of bounds for length 2 (wenn 2 gleiche Karten unterschiedlicher Farbe ausgespielt werden, zb: Pick Zehner + Herz Zehner)
             for (int j = 0; j < playCards.size(); j++) {
                 if (temp.getColor() == playCards.get(j).getColor() && temp.getValue() < playCards.get(j).getValue()) {
                     playCards.remove(temp);
@@ -294,8 +294,8 @@ public class GameLogic {
             }
         }
         final int finalOldCallerNumber = oldCallerNumber;
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
+        game.getTeams().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
+        game.getTeams().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
     }
 
     //give Cards for each player
@@ -343,7 +343,7 @@ public class GameLogic {
     //handkarten anschuen
     //sendData toPlayers after one has played out a card
     public void sendStingDataToPlayers(Game game, UUID winnerID) {
-        List<Card> cards = game.getPlayedCards().values().stream().collect(Collectors.toList());
+        List<Card> cards = new ArrayList<>(game.getPlayedCards().values());
         ObjectMapper mapper = new ObjectMapper();
 
         System.out.println(game);
@@ -354,7 +354,7 @@ public class GameLogic {
             Player turnPlayer = null;
             Player nextPlayer=null;
             for(Team team: game.getTeams()) {
-                turnPlayer = team.getPlayers().stream().filter(player -> player.isMyTurn()).findFirst().orElse(null);
+                turnPlayer = team.getPlayers().stream().filter(Player::isMyTurn).findFirst().orElse(null);
                 if(turnPlayer!=null){
                     break;
                 }
@@ -427,8 +427,6 @@ public class GameLogic {
 
 
 
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -450,7 +448,7 @@ public class GameLogic {
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
-            calledPlayer = team.getPlayers().stream().filter(player1 -> player1.isPlaysCall()).findFirst().get(); // TODO
+            calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get(); // TODO
         }
         //makeRightMove
         //check if succeeds
@@ -558,22 +556,20 @@ public class GameLogic {
     public void callPeriod(Game game, ObjectMapper mapper, Player player){
         if (game.getNumberOfCalledCalls() == 4) {
             //send Data
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 if (player1.isPlaysCall()) {
                     player1.setMyTurn(true);
 
-                    switch(game.getCurrentHighestCall()){
-                        case BETTLER,ASSENBETTLER,PLAUDERER:
-                            game.getTeams().get(player1.getPlayerNumber()%2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
-                            break;
-                        case KONTRABAUER,KONTRASCHNAPSER:
+                    switch (game.getCurrentHighestCall()) {
+                        case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
+                        case KONTRABAUER, KONTRASCHNAPSER -> {
                             player1.setMyTurn(false);
-                            game.getTeams().stream().forEach(team2 -> team.getPlayers().stream().forEach(player2 ->{
-                                if(player2.isCaller()){
+                            game.getTeams().forEach(team2 -> team.getPlayers().forEach(player2 -> {
+                                if (player2.isCaller()) {
                                     player2.setMyTurn(true);
                                 }
                             }));
-                            break;
+                        }
                     }
 
                 } else {
@@ -588,9 +584,9 @@ public class GameLogic {
             //deshalb weil wir den aktuellen hier noch brauchen
             defineCaller(game);
         } else {
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 if (player1.isMyTurn()) {
-                    game.getTeams().stream().forEach(team1 -> team.getPlayers().stream().forEach(player2 -> {
+                    game.getTeams().forEach(team1 -> team.getPlayers().forEach(player2 -> {
                         if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
                             player2.setMyTurn(true);
                         }

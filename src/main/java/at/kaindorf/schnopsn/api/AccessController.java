@@ -33,7 +33,7 @@ public class AccessController {
 
         // invalid playerName
         if (playerName == null || playerName.length() <= 0) {
-            return ResponseEntity.status(400).body("Empty or invalid playerName");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerName"));
         }
         Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0,true,null);
         storage.getActivePlayers().add(newPlayer);
@@ -45,12 +45,12 @@ public class AccessController {
 
         // if wrong gameType
         if (gameType == null || !(GameType._2ERSCHNOPSN.toString().equals(gameType) || GameType._4ERSCHNOPSN.toString().equals(gameType))) {
-            return ResponseEntity.status(400).body("Empty or invalid gameType: _2ERSCHNOPSN, _4ERSCHNOPSN");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid gameType: _2ERSCHNOPSN, _4ERSCHNOPSN"));
         }
 
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error","Empty or invalid playerID: must be type UUID!"));
         }
 
 
@@ -79,9 +79,9 @@ public class AccessController {
 
             return ResponseEntity.status(200).body(newGame);
         } catch (NullPointerException e) {
-            return ResponseEntity.status(400).body("Player does not exist!"); // no player found
+            return ResponseEntity.status(400).body(new Message("error", "Player does not exist!")); // no player found
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("Invalid playerID: must be type UUID!"); // wrong format of playerID (UUID)
+            return ResponseEntity.status(400).body(new Message("error", "Invalid playerID: must be type UUID!")); // wrong format of playerID (UUID)
         }
     }
 
@@ -90,12 +90,12 @@ public class AccessController {
 
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerID: must be type UUID!"));
         }
 
         // if invalid gameID
         if (gameID == null || gameID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid gameID: must be type UUID!"));
         }
 
         try {
@@ -122,23 +122,23 @@ public class AccessController {
             return ResponseEntity.status(200).body(game);
 
         } catch (NullPointerException e) {
-            return ResponseEntity.status(400).body("Player or Game does not exist!"); // no player|game found
+            return ResponseEntity.status(400).body(new Message("error", "Player or Game does not exist!")); // no player|game found
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("ID: must be type UUID!"); // wrong format of playerID (UUID)
+            return ResponseEntity.status(400).body(new Message("error", "ID: must be type UUID!")); // wrong format of playerID (UUID)
         }
     }
 
     @PostMapping(path = "/startRound2erSchnopsn")
     public Object startRound2erSchnopsn(@RequestParam("gameID") String gameID) {
         if (gameID == null || gameID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid gameID: must be type UUID!"));
         }
         UUID realGameID;
 
         try {
             realGameID = UUID.fromString(gameID);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("Wrong color or wrong format of gameID"); // wrong format of gameID or wrong color
+            return ResponseEntity.status(400).body(new Message("error", "Wrong color or wrong format of gameID")); // wrong format of gameID or wrong color
         }
 
         //Karten Methode 5 zurück
@@ -202,28 +202,35 @@ public class AccessController {
 
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerID: must be type UUID!"));
         }
 
         // if invalid gameID
         if (gameID == null || gameID.length() != 36) {
-            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid gameID: must be type UUID!"));
         }
 
         if (color == null) {
-            return ResponseEntity.status(400).body("No color given!");
+            return ResponseEntity.status(400).body(new Message("error", "No color given!"));
         }
 
         try {
             Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
             Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             Card card = logic.getCard(color, cardValue);
-            UUID winnerID = logic.makeRightMove(game, card, player);
+            UUID winnerID = logic.makeRightMove(game, card, player); // TODO - Bug: returns null
             logic.sendStingDataToPlayers(game, winnerID);
-            return ResponseEntity.status(200).body(GameLogic.findPlayer(storage.getActivePlayers(), winnerID + "") + "");
+
+            if(winnerID == null){
+                return ResponseEntity.status(200).body(new Message("winner", "waiting for the other(s) to play.."));
+            }else{
+                return ResponseEntity.status(200).body(new Message("winner", GameLogic.findPlayer(storage.getActivePlayers(), winnerID + "")));
+            }
+
 
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(400).body("Invalid format of ID or invalid color.");
+            e.printStackTrace();
+            return ResponseEntity.status(400).body(new Message("error", "Invalid format of ID or invalid color: " + e.getMessage()));
         }
     }
 
@@ -284,11 +291,9 @@ public class AccessController {
             return ResponseEntity.status(400).body("No color given!");
         }
 
-        UUID realGameID;
         Color realColor;
 
         try {
-            realGameID = UUID.fromString(gameID);
             realColor = Color.valueOf(color.toUpperCase());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(400).body("Wrong color or wrong format of gameID"); // wrong format of gameID or wrong color
@@ -345,7 +350,7 @@ public class AccessController {
         logic.isCallHigher(game, validCall, player);
         logic.callPeriod(game,mapper,player);
 
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+        game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("highestCall", game.getCurrentHighestCall()))));
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
@@ -354,7 +359,7 @@ public class AccessController {
             }
         }));
 
-        return ResponseEntity.status(200).body("");
+        return ResponseEntity.status(200).body(new Message("info", "status: 200"));
     }
 
 }
