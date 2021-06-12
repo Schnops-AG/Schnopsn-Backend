@@ -28,6 +28,7 @@ public class AccessController {
     //TODO: färbelpflicht, Stechpflicht einbauen
     //TODO: Frontend besprechen: Farbenringerl, available Calls
     //TODO: handkarten in sendstingData anschauen
+    //TODO: austauschen 2erSchnopsn
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -222,7 +223,6 @@ public class AccessController {
             Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             Card card = logic.getCard(color, cardValue);
             UUID winnerID = logic.makeRightMove(game, card, player); // TODO - Bug: returns null
-            System.out.println(winnerID);
             logic.sendStingDataToPlayers(game, winnerID);
 
             if(winnerID == null){

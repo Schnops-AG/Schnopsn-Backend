@@ -206,13 +206,13 @@ public class GameLogic {
             }
             count++;
         }
-        System.out.println(playCards);
-        System.out.println("in for");
+        //System.out.println(playCards);
+        //System.out.println("in for");
 
         for (Player player : playMap.keySet()) {
-            System.out.println(playMap.get(player));
+            //System.out.println(playMap.get(player));
             if (playMap.get(player) == playCards.get(0)) {
-                System.out.println(player.getPlayerID());
+                //System.out.println(player.getPlayerID());
                 return player.getPlayerID();
             }
         }
@@ -236,7 +236,7 @@ public class GameLogic {
             winnerTeam = 1;
         }
         if (game.getCurrentHighestCall() == Call.NORMAL) {
-            looserScore = game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getCurrentScore();
+            looserScore = game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore();
             if (looserScore == 0) {
                 game.getTeams().get(winnerTeam).setCurrentGameScore(game.getTeams().get(winnerTeam).getCurrentGameScore() + 3);
             } else if (looserScore < 33) {
@@ -355,9 +355,8 @@ public class GameLogic {
         List<Card> cards = new ArrayList<>(game.getPlayedCards().values());
         ObjectMapper mapper = new ObjectMapper();
 
-        System.out.println(game);
-
         if (winnerID == null) {
+            //System.out.println("kein gewinner");
             //Sends a message to all players, about who will play next
             // Spieler der gerade dran war
             Player turnPlayer = null;
@@ -408,7 +407,8 @@ public class GameLogic {
             }));
         } else {
             Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
-            game.getPlayedCards().clear();
+            //System.out.println(winner);
+
 
             int points = 0;
             for (Card card1 : cards) {
@@ -428,7 +428,6 @@ public class GameLogic {
                         game.getTeams().get(player1.getPlayerNumber() % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() + points);
 
                     } else {
-
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("winner", winner.getPlayerName()))));
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
@@ -448,6 +447,7 @@ public class GameLogic {
             else if (game.getGameType() == GameType._4ERSCHNOPSN) {
                 sendAdditionalData4erSchnopsn(game, mapper, winner);
             }
+            game.getPlayedCards().clear();
 
         }
     }
@@ -467,7 +467,7 @@ public class GameLogic {
             }
             //ok
         } else {
-            awardForPoints4erSchnopsn(game.getTeams().get(calledPlayer.getPlayerNumber() % 2 + 1).getPlayers().get(0), game);
+            awardForPoints4erSchnopsn(game.getTeams().get((calledPlayer.getPlayerNumber()+1) % 2).getPlayers().get(0), game);
         }
 
     }
@@ -502,9 +502,9 @@ public class GameLogic {
         if (game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentScore() > 65 || game.getAvailableCards().size() == 0) {
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben und überprüfen ob Bummerl gegeben wird
-            if (endOfRound2erSchnopsn(winner, game, game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getCurrentScore())) {
+            if (endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore())) {
                 //Bummerlstand von Verlierer erhöhen
-                game.getTeams().get(winner.getPlayerNumber() % 2 + 1).setCurrentBummerl(game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getCurrentBummerl() + 1);
+                game.getTeams().get((winner.getPlayerNumber()+1) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentBummerl() + 1);
                 //alle Bummerl holen
                 Map<String, Integer> bummerl = new LinkedHashMap<>();
                 for (Team team : game.getTeams()) {
@@ -544,8 +544,8 @@ public class GameLogic {
                 winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
                 game.getPlayerCardMap().get(winner).add(card);
                 card = getRandomCard(game.getAvailableCards(),false);
-                game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
-                game.getPlayerCardMap().get(game.getTeams().get(winner.getPlayerNumber() % 2 + 1).getPlayers().get(0)).add(card);
+                game.getTeams().get((winner.getPlayerNumber()+1) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()+1) % 2).getPlayers().get(0)).add(card);
             } catch (IOException e) {
                 e.printStackTrace();
             }

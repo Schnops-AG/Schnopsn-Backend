@@ -32,7 +32,7 @@ public class SocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
 
-        System.out.println("here??");
+        //System.out.println("here??");
         sessions.add(session);
         session.sendMessage(new TextMessage("Hello from Spring!")); // send Message to client
     }
