@@ -114,6 +114,8 @@ public class AccessController {
             System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
+                    // TODO - BUG: .IllegalStateException: The WebSocket session [f] has been closed and no method (apart from close()) may be called on a closed session
+                    // if: more players join than allowed in a room
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join",logic.getAllCurrentPlayerNames(game)))));
                 } catch (IOException e) {
                     e.printStackTrace();
