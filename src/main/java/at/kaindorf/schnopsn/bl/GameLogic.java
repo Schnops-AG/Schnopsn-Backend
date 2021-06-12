@@ -144,7 +144,7 @@ public class GameLogic {
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
                     if (trumpNeeded(game.getCurrentHighestCall())) {
-                        getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(),game);
+                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(),game);
                     } else {
                         return getPlayerWithHighestCard(game.getPlayedCards(), null,game);
                     }
@@ -158,16 +158,16 @@ public class GameLogic {
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump,Game game) {
         List<Card> playCards = new ArrayList<>();
 
-        System.out.println(playMap);
+        //System.out.println(playMap);
 
         for (Player player : playMap.keySet()) {
-            System.out.println(player);
-            System.out.println(playMap.get(player));
+           // System.out.println(player);
+            //System.out.println(playMap.get(player));
             playCards.add(playMap.get(player));
         }
 
 
-        System.out.println(playCards);
+        //System.out.println(playCards);
 
         //If Zehnergang then Ass has value 1
         if(game.getCurrentHighestCall()==Call.ZEHNERGANG){
@@ -180,7 +180,7 @@ public class GameLogic {
 
         Color firstColor = playCards.get(0).getColor();
 
-        System.out.println(playCards);
+        //System.out.println(playCards);
         int count = 0;
         while (playCards.size() > 1) {
             Card temp = playCards.get(count); // TODO - Bug: IndexOutOfBoundsException  Index 2 out of bounds for length 2 (wenn 2 gleiche Karten unterschiedlicher Farbe ausgespielt werden, zb: Pick Zehner + Herz Zehner)
@@ -198,12 +198,21 @@ public class GameLogic {
                     count--;
                     break;
                 }
+                else if(game.getGameType()==GameType._2ERSCHNOPSN && temp.getColor() != firstColor){
+                    playCards.remove(temp);
+                    count--;
+                    break;
+                }
             }
             count++;
         }
+        System.out.println(playCards);
+        System.out.println("in for");
 
         for (Player player : playMap.keySet()) {
+            System.out.println(playMap.get(player));
             if (playMap.get(player) == playCards.get(0)) {
+                System.out.println(player.getPlayerID());
                 return player.getPlayerID();
             }
         }

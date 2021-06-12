@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.net.URL;
+import java.util.Objects;
 
 public class Card {
     private String name;
@@ -52,6 +53,21 @@ public class Card {
 
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Card card = (Card) o;
+        return value == card.value &&
+                name.equals(card.name) &&
+                color == card.color;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, value, color);
     }
 
     @Override

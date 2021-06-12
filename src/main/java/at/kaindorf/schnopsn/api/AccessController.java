@@ -16,10 +16,11 @@ import java.util.*;
 @RequestMapping("api/v1")
 @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS, RequestMethod.HEAD, RequestMethod.PUT})
 public class AccessController {
-
+    //TODO: port auf 3000 zurücksetzten
     private final GameLogic logic = new GameLogic();
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
+
     //TODO setAktive: if Call e.g. BETTLER then only three players //finished
     //TODO: KONTRA myTurn first on caller true //finished
     //TODO: check three cases of SCHNAPSER
@@ -111,7 +112,7 @@ public class AccessController {
                 }
             }
 
-            System.out.println(game);
+            //System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     // TODO - BUG: .IllegalStateException: The WebSocket session [f] has been closed and no method (apart from close()) may be called on a closed session
@@ -221,6 +222,7 @@ public class AccessController {
             Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             Card card = logic.getCard(color, cardValue);
             UUID winnerID = logic.makeRightMove(game, card, player); // TODO - Bug: returns null
+            System.out.println(winnerID);
             logic.sendStingDataToPlayers(game, winnerID);
 
             if(winnerID == null){
