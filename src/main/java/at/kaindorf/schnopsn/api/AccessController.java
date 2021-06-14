@@ -24,11 +24,13 @@ public class AccessController {
     //TODO setAktive: if Call e.g. BETTLER then only three players //finished
     //TODO: KONTRA myTurn first on caller true //finished
     //TODO: check three cases of SCHNAPSER
-    //TODO: zudrehen 2er Schnopsn
-    //TODO: färbelpflicht, Stechpflicht einbauen
+    //TODO: zudrehen 2er Schnopsn //finished
+    //TODO: färbelpflicht 2erSchnopsn // finsihed
+    //TODO:färeblpflicht + stechpflicht 4er Schnopsn
     //TODO: Frontend besprechen: Farbenringerl, available Calls
     //TODO: handkarten in sendstingData anschauen
-    //TODO: austauschen 2erSchnopsn
+    //TODO: austauschen 2erSchnopsn //finished
+    //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten)
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -154,6 +156,7 @@ public class AccessController {
 
         Card trumpCard = logic.getTrumpCard(game);
         game.setCurrentTrump(trumpCard.getColor());
+        game.setFaerbeln(false);
 
         //Stichpunkte zurücksetzen
         for (Team team : game.getTeams()) {
@@ -195,8 +198,46 @@ public class AccessController {
         }
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        game.setFaerbeln(true);
+        game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+            try {
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("zugedreht",player.getPlayerName()))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
 
-        return null;
+        return ResponseEntity.status(200).body(new Message("zugedreht", "zudrehen successful"));
+    }
+
+
+    @PostMapping(path = "/switchTrumpCard")
+    public Object switchTrumpCard(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        if(logic.switchTrumpCard(game,player)){
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("switchedTrumpCard",player.getPlayerName()))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newTrumpCard",game.getAvailableCards().get(game.getAvailableCards().size()-1)))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+           }));
+            return ResponseEntity.status(200).body(new Message("switchedTrumpCard", "switched successful"));
+
+        }
+
+        return ResponseEntity.status(200).body(new Message("error", "only with trumpf bur"));
     }
 
 

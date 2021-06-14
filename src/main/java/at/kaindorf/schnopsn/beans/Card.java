@@ -11,48 +11,60 @@ public class Card {
     private int value;
     private URL image;
     private Color color;
+    private boolean priority;
 
-    public Card (String name, int value, URL image, Color color) {
+    public Card(String name, int value, URL image, Color color, boolean priority) {
         this.name = name;
         this.value = value;
         this.image = image;
         this.color = color;
+        this.priority = priority;
     }
 
     public Card() {
     }
 
     // region <getter, setter, toString>
+
+
     public String getName() {
         return name;
-    }
-
-    public int getValue() {
-        return value;
-    }
-
-    public URL getImage() {
-        return image;
-    }
-
-    public Color getColor() {
-        return color;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     public void setValue(int value) {
         this.value = value;
+    }
+
+    public URL getImage() {
+        return image;
     }
 
     public void setImage(URL image) {
         this.image = image;
     }
 
+    public Color getColor() {
+        return color;
+    }
+
     public void setColor(Color color) {
         this.color = color;
+    }
+
+    public boolean isPriority() {
+        return priority;
+    }
+
+    public void setPriority(boolean priority) {
+        this.priority = priority;
     }
 
     @Override

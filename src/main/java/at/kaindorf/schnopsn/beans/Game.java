@@ -19,8 +19,9 @@ public class Game {
     private int numberOfStingsPerRound;
     //Karten auf der Hand pro Spieler
     private Map<Player,List<Card>> playerCardMap;
+    private boolean faerbeln;
 
-    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls, int numberOfStingsPerRound, Map<Player, List<Card>> playerCardMap) {
+    public Game(UUID gameID, GameType gameType, URL inviteLink, Color currentTrump, int maxNumberOfPlayers, List<Team> teams, Call currentHighestCall, Map<Player, Card> playedCards, List<Card> availableCards, int numberOfCalledCalls, int numberOfStingsPerRound, Map<Player, List<Card>> playerCardMap, boolean faerbeln) {
         this.gameID = gameID;
         this.gameType = gameType;
         this.inviteLink = inviteLink;
@@ -33,6 +34,7 @@ public class Game {
         this.numberOfCalledCalls = numberOfCalledCalls;
         this.numberOfStingsPerRound = numberOfStingsPerRound;
         this.playerCardMap = playerCardMap;
+        this.faerbeln = faerbeln;
     }
 
     public Game() {
@@ -132,6 +134,14 @@ public class Game {
 
     public void setPlayerCardMap(Map<Player, List<Card>> playerCardMap) {
         this.playerCardMap = playerCardMap;
+    }
+
+    public boolean isFaerbeln() {
+        return faerbeln;
+    }
+
+    public void setFaerbeln(boolean faerbeln) {
+        this.faerbeln = faerbeln;
     }
 
     @Override
