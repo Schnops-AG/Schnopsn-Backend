@@ -344,7 +344,7 @@ public class GameLogic {
         }
         Card card = availableCards.get(index);
         availableCards.remove(index);
-        if (isTrumpCard) {
+        if (isTrumpCard && availableCards.size() == 0) {
             availableCards.add(card);
         }
         return card;
@@ -544,8 +544,8 @@ public class GameLogic {
                 winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
                 game.getPlayerCardMap().get(winner).add(card);
                 card = getRandomCard(game.getAvailableCards(),false);
-                game.getTeams().get((winner.getPlayerNumber()+1) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
-                game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()+1) % 2).getPlayers().get(0)).add(card);
+                game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
             } catch (IOException e) {
                 e.printStackTrace();
             }
