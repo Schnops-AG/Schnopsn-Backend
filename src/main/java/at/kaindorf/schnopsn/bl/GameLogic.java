@@ -470,21 +470,24 @@ public class GameLogic {
             final Player realNextPlayer = nextPlayer;
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                     if (player1.getPlayerNumber() == realNextPlayer.getPlayerNumber()) {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzten
                         //TODO: 4er Schnopsn färbeln einfügen
-                        if (game.getGameType() == GameType._2ERSCHNOPSN) {
-                            defineValidCards2erSchnopsn(game, player1);
+                        if(game.isFaerbeln()){
+                            if (game.getGameType() == GameType._2ERSCHNOPSN) {
+                                defineValidCards2erSchnopsn(game, player1);
+                            }
+                            player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
                         }
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
+
                     } else {
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", false))));
                     }
 
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -505,10 +508,10 @@ public class GameLogic {
                     if (player1.getPlayerID() == winnerID) {
                         player1.setNumberOfStingsPerRound(player1.getNumberOfStingsPerRound()+1);
                         //Punkte setzten
-                        game.getTeams().get(player1.getPlayerNumber()+1 % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() + points);
+                        game.getTeams().get((player1.getPlayerNumber()+1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber()+1) % 2).getCurrentScore() + points);
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get(player1.getPlayerNumber()+1 % 2).getCurrentScore()))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber()+1) % 2).getCurrentScore()))));
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
 
@@ -594,7 +597,7 @@ public class GameLogic {
             }));
         }
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
-        if (game.getTeams().get(winner.getPlayerNumber()+1 % 2).getCurrentScore() > 65) {
+        if (game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore() > 65) {
             System.out.println("no cards to ziehen");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben und überprüfen ob Bummerl gegeben wird

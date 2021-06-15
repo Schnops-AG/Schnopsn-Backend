@@ -20,6 +20,7 @@ public class AccessController {
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
 
+    // TODO: nach jedem Stich buffer überprüfen
     //TODO setAktive: if Call e.g. BETTLER then only three players //finished
     //TODO: KONTRA myTurn first on caller true //finished
     //TODO: check three cases of SCHNAPSER
@@ -257,12 +258,12 @@ public class AccessController {
 
         if (type.equalsIgnoreCase("20er")) {
             //check ob buffer
-            if(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()==0){
-                game.getTeams().get(player.getPlayerNumber()+1%2).setBuffer(game.getTeams().get(player.getPlayerNumber()+1%2).getBuffer()+20);
+            if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()==0){
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setBuffer(game.getTeams().get((player.getPlayerNumber()+1)%2).getBuffer()+20);
             }
             else{
-                game.getTeams().get(player.getPlayerNumber()+1%2).setCurrentScore(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()+20);
-                game.getTeams().get(player.getPlayerNumber()+1%2).getPlayers().forEach(player1 -> {
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+20);
+                game.getTeams().get((player.getPlayerNumber()+1)%2).getPlayers().forEach(player1 -> {
                     try {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20erPoints", 20))));
                     } catch (IOException e) {
