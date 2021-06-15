@@ -38,7 +38,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerName"));
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0, true, 0, null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0, true, null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -256,6 +256,21 @@ public class AccessController {
 
 
         if (type.equalsIgnoreCase("20er")) {
+            //check ob buffer
+            if(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()==0){
+                game.getTeams().get(player.getPlayerNumber()+1%2).setBuffer(game.getTeams().get(player.getPlayerNumber()+1%2).getBuffer()+20);
+            }
+            else{
+                game.getTeams().get(player.getPlayerNumber()+1%2).setCurrentScore(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()+20);
+                game.getTeams().get(player.getPlayerNumber()+1%2).getPlayers().forEach(player1 -> {
+                    try {
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20erPoints", 20))));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20er", player.getPlayerName()))));
@@ -271,6 +286,19 @@ public class AccessController {
             return ResponseEntity.status(200).body(new Message("20er", "call 20er successful"));
 
         } else if (type.equalsIgnoreCase("40er")) {
+            if(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()==0){
+                game.getTeams().get(player.getPlayerNumber()+1%2).setBuffer(game.getTeams().get(player.getPlayerNumber()+1%2).getBuffer()+40);
+            }
+            else{
+                game.getTeams().get(player.getPlayerNumber()+1%2).setCurrentScore(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()+40);
+                game.getTeams().get(player.getPlayerNumber()+1%2).getPlayers().forEach(player1 -> {
+                    try {
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20erPoints", 20))));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("40er", player.getPlayerName()))));

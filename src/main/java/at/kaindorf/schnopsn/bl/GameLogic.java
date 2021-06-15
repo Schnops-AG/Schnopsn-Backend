@@ -54,8 +54,8 @@ public class GameLogic {
         List<Player> players = new ArrayList<>();
         players.add(player);
         List<Team> teams = new ArrayList<>();
-        teams.add(new Team(0, 0, 0, players));
-        teams.add(new Team(0, 0, 0, new ArrayList<>()));
+        teams.add(new Team(0, 0, 0,0, players));
+        teams.add(new Team(0, 0, 0,0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
             game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(), false);
@@ -503,13 +503,15 @@ public class GameLogic {
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
+                        player1.setNumberOfStingsPerRound(player1.getNumberOfStingsPerRound()+1);
+                        //Punkte setzten
+                        game.getTeams().get(player1.getPlayerNumber()+1 % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() + points);
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingPoints", points))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get(player1.getPlayerNumber()+1 % 2).getCurrentScore()))));
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
-                        //Punkte setzten
-                        game.getTeams().get(player1.getPlayerNumber() % 2).setCurrentScore(game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentScore() + points);
+
 
                     } else {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("winner", winner.getPlayerName()))));
@@ -592,7 +594,7 @@ public class GameLogic {
             }));
         }
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
-        if (game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentScore() > 65) {
+        if (game.getTeams().get(winner.getPlayerNumber()+1 % 2).getCurrentScore() > 65) {
             System.out.println("no cards to ziehen");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben und überprüfen ob Bummerl gegeben wird
@@ -714,6 +716,7 @@ public class GameLogic {
         //alle Colors der Handkarten hinzufügen
         Set<Color> colorSet = new TreeSet<>();
         for (Card card : handCards) {
+            card.setPriority(false);
             colorSet.add(card.getColor());
         }
         for (Color color : colorSet) {
@@ -727,6 +730,8 @@ public class GameLogic {
                     switch (tempCard.getName()) {
                         case "Dame":
                             if (card.getName().equals("König")) {
+                                tempCard.setPriority(true);
+                                card.setPriority(true);
                                 if (game.getCurrentTrump() == color) {
                                     return "40er";
                                 }
@@ -735,16 +740,21 @@ public class GameLogic {
                             break;
                         case "König":
                             if (card.getName().equals("Dame")) {
+                                tempCard.setPriority(true);
+                                card.setPriority(true);
                                 if (game.getCurrentTrump() == color) {
                                     return "40er";
                                 }
                                 return "20er";
                             }
+                            break;
                     }
                 }
-
-
             }
+        }
+
+        for (Card card:handCards) {
+            card.setPriority(true);
         }
 
         return "";

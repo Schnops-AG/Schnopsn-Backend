@@ -11,12 +11,15 @@ public class Team {
     private int currentGameScore;
     private int currentScore;
     private int currentBummerl;
+    private int buffer;
     private List<Player> players;
 
-    public Team(int currentGameScore, int currentScore, int currentBummerl, List<Player> players) {
+
+    public Team(int currentGameScore, int currentScore, int currentBummerl, int buffer, List<Player> players) {
         this.currentGameScore = currentGameScore;
         this.currentScore = currentScore;
         this.currentBummerl = currentBummerl;
+        this.buffer = buffer;
         this.players = players;
     }
 
@@ -47,6 +50,14 @@ public class Team {
 
     public void setCurrentBummerl(int currentBummerl) {
         this.currentBummerl = currentBummerl;
+    }
+
+    public int getBuffer() {
+        return buffer;
+    }
+
+    public void setBuffer(int buffer) {
+        this.buffer = buffer;
     }
 
     public List<Player> getPlayers() {
