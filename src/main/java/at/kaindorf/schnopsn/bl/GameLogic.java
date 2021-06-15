@@ -17,33 +17,32 @@ public class GameLogic {
 
     private List<Card> allCards = new ArrayList<>();
     private GameStorage storage = GameStorage.getInstance();
-    //TODO 2erSchnopsn zuadrahen
 
     public GameLogic() {
         try {
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KARO,false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KARO,false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.KARO,false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KARO,false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KARO,false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KARO, false));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KARO, false));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.KARO, false));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KARO, false));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KARO, false));
 
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KREUZ,false));
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KREUZ,false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.KREUZ,false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KREUZ,false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KREUZ,false));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KREUZ, false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KREUZ, false));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.KREUZ, false));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KREUZ, false));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KREUZ, false));
 
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.PICK,false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.PICK,false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.PICK,false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.PICK,false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.PICK,false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.PICK, false));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.PICK, false));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.PICK, false));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.PICK, false));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.PICK, false));
 
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.HERZ,false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.HERZ,false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.HERZ,false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.HERZ,false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.HERZ,false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.HERZ, false));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.HERZ, false));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.HERZ, false));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.HERZ, false));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.HERZ, false));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -59,9 +58,9 @@ public class GameLogic {
         teams.add(new Team(0, 0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(),false);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(), false);
         } else if (gameType == GameType._4ERSCHNOPSN) {
-            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(),true);
+            game = new Game(UUID.randomUUID(), gameType, null, null, 4, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(), true);
         }
         player.setPlayerNumber(1);
         game.setInviteLink(generateInviteLink(game));
@@ -130,9 +129,9 @@ public class GameLogic {
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers() - 1) {
                     if (trumpNeeded(game.getCurrentHighestCall())) {
-                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(),game);
+                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(), game);
                     } else {
-                        return getPlayerWithHighestCard(game.getPlayedCards(), null,game);
+                        return getPlayerWithHighestCard(game.getPlayedCards(), null, game);
                     }
                 }
                 break;
@@ -144,9 +143,9 @@ public class GameLogic {
                 }
                 if (game.getPlayedCards().size() == game.getMaxNumberOfPlayers()) {
                     if (trumpNeeded(game.getCurrentHighestCall())) {
-                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(),game);
+                        return getPlayerWithHighestCard(game.getPlayedCards(), game.getCurrentTrump(), game);
                     } else {
-                        return getPlayerWithHighestCard(game.getPlayedCards(), null,game);
+                        return getPlayerWithHighestCard(game.getPlayedCards(), null, game);
                     }
                 }
                 break;
@@ -155,13 +154,13 @@ public class GameLogic {
     }
 
     //definiertwelcher Spieler den Stich bekommt (welche Karte die Höchste ist)
-    public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump,Game game) {
+    public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump, Game game) {
         List<Card> playCards = new ArrayList<>();
 
         //System.out.println(playMap);
 
         for (Player player : playMap.keySet()) {
-           // System.out.println(player);
+            // System.out.println(player);
             //System.out.println(playMap.get(player));
             playCards.add(playMap.get(player));
         }
@@ -170,9 +169,9 @@ public class GameLogic {
         //System.out.println(playCards);
 
         //If Zehnergang then Ass has value 1
-        if(game.getCurrentHighestCall()==Call.ZEHNERGANG){
+        if (game.getCurrentHighestCall() == Call.ZEHNERGANG) {
             playCards.forEach(card -> {
-                if(card.getValue()==11){
+                if (card.getValue() == 11) {
                     card.setValue(1);
                 }
             });
@@ -183,7 +182,7 @@ public class GameLogic {
         //System.out.println(playCards);
         int count = 0;
         while (playCards.size() > 1) {
-            Card temp = playCards.get(count); // TODO - Bug: IndexOutOfBoundsException  Index 2 out of bounds for length 2 (wenn 2 gleiche Karten unterschiedlicher Farbe ausgespielt werden, zb: Pick Zehner + Herz Zehner)
+            Card temp = playCards.get(count);
             for (int j = 0; j < playCards.size(); j++) {
                 if (temp.getColor() == playCards.get(j).getColor() && temp.getValue() < playCards.get(j).getValue()) {
                     playCards.remove(temp);
@@ -197,8 +196,7 @@ public class GameLogic {
                     playCards.remove(temp);
                     count--;
                     break;
-                }
-                else if(game.getGameType()==GameType._2ERSCHNOPSN && temp.getColor() != firstColor){
+                } else if (game.getGameType() == GameType._2ERSCHNOPSN && temp.getColor() != firstColor) {
                     playCards.remove(temp);
                     count--;
                     break;
@@ -236,7 +234,7 @@ public class GameLogic {
             winnerTeam = 1;
         }
         if (game.getCurrentHighestCall() == Call.NORMAL) {
-            looserScore = game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore();
+            looserScore = game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore();
             if (looserScore == 0) {
                 game.getTeams().get(winnerTeam).setCurrentGameScore(game.getTeams().get(winnerTeam).getCurrentGameScore() + 3);
             } else if (looserScore < 33) {
@@ -351,19 +349,19 @@ public class GameLogic {
         }
         return card;
     }
-    public boolean switchTrumpCard(Game game, Player player){
-        List<Card> handCards = game.getPlayerCardMap().get(player);
-        boolean ok =false;
 
-        for(Card card : handCards){
+    public boolean switchTrumpCard(Game game, Player player) {
+        List<Card> handCards = game.getPlayerCardMap().get(player);
+
+        for (Card card : handCards) {
             //Wenn es Trumpf bur is
-            if(card.getColor()==game.getCurrentTrump() && card.getValue()==2){
+            if (card.getColor() == game.getCurrentTrump() && card.getValue() == 2) {
                 //wenn am Stapel noch 2 Karten vorhanden sind
-                if(game.getAvailableCards().size()>=2) {
+                if (game.getAvailableCards().size() >= 2) {
                     Card trumpCard = game.getAvailableCards().get(game.getAvailableCards().size() - 1);
-                    //lösch Trumpfkarte aus Stapel
-                    game.getAvailableCards().remove(game.getAvailableCards().size()-1);
-                    //setz trumpfBur als Trumpfkarte
+                    //lösche Trumpfkarte aus Stapel
+                    game.getAvailableCards().remove(game.getAvailableCards().size() - 1);
+                    //setze trumpfBur als Trumpfkarte
                     game.getAvailableCards().add(card);
                     game.getPlayerCardMap().get(player).remove(card);
                     game.getPlayerCardMap().get(player).add(trumpCard);
@@ -373,62 +371,63 @@ public class GameLogic {
         }
         return false;
     }
-    public void defineValidCards2erSchnopsn(Game game, Player player){
+
+    public void defineValidCards2erSchnopsn(Game game, Player player) {
         //get first played Card
         Card firstCard = game.getPlayedCards().get(0);
         List<Integer> levels = new ArrayList<>();
 
-        for (Card card:game.getPlayerCardMap().get(player)) {
+        for (Card card : game.getPlayerCardMap().get(player)) {
             //erstes Karte false dann überprüfen ob ok
             card.setPriority(false);
 
             //Wenn nichts ausgespielt
-            if(firstCard==null){
+            if (firstCard == null) {
                 levels.add(3);
             }
             //Wenn gleiche farbe
-            else if (card.getColor()==firstCard.getColor()){
+            else if (card.getColor() == firstCard.getColor()) {
                 levels.add(1);
             }
             //Wenn Trumpf
-            else if(card.getColor()!= firstCard.getColor() && card.getColor()==game.getCurrentTrump()){
+            else if (card.getColor() != firstCard.getColor() && card.getColor() == game.getCurrentTrump()) {
                 levels.add(2);
             }
             //sonst irgendeine
-            else{
+            else {
                 levels.add(3);
             }
         }
         Collections.sort(levels);
         int minLevel = levels.get(0);
 
-        switch (minLevel){
+        switch (minLevel) {
             case 3:
                 //Alle Karten
-                for (Card card:game.getPlayerCardMap().get(player)) {
+                for (Card card : game.getPlayerCardMap().get(player)) {
                     card.setPriority(true);
                 }
                 break;
             case 2:
                 //Trumpfkarten
-                for (Card card:game.getPlayerCardMap().get(player)) {
-                     if(card.getColor()!= firstCard.getColor() && card.getColor()==game.getCurrentTrump()){
-                         card.setPriority(true);
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    if (card.getColor() != firstCard.getColor() && card.getColor() == game.getCurrentTrump()) {
+                        card.setPriority(true);
                     }
                 }
                 break;
             case 1:
                 //Karten mit gleicher Farbe
-                for (Card card:game.getPlayerCardMap().get(player)) {
-                     if (card.getColor()==firstCard.getColor()){
-                         card.setPriority(true);
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    if (card.getColor() == firstCard.getColor()) {
+                        card.setPriority(true);
                     }
                 }
                 break;
         }
     }
 
-    //handkarten anschuen
+    //handkarten anschauen
     //sendData toPlayers after one has played out a card
     public void sendStingDataToPlayers(Game game, UUID winnerID) {
         List<Card> cards = new ArrayList<>(game.getPlayedCards().values());
@@ -439,29 +438,29 @@ public class GameLogic {
             //Sends a message to all players, about who will play next
             // Spieler der gerade dran war
             Player turnPlayer = null;
-            Player nextPlayer=null;
-            for(Team team: game.getTeams()) {
+            Player nextPlayer = null;
+            for (Team team : game.getTeams()) {
                 turnPlayer = team.getPlayers().stream().filter(Player::isMyTurn).findFirst().orElse(null);
-                if(turnPlayer!=null){
+                if (turnPlayer != null) {
                     break;
                 }
             }
             final Player finalTurnPlayer = turnPlayer;
 
-            for (Team team:game.getTeams()) {
-                nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
-                if(nextPlayer!=null){
+            for (Team team : game.getTeams()) {
+                nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalTurnPlayer.getPlayerNumber() % game.getMaxNumberOfPlayers() + 1)).findFirst().orElse(null);
+                if (nextPlayer != null) {
                     break;
                 }
             }
 
             final Player finalNextPlayer = nextPlayer;
-            switch(game.getCurrentHighestCall()){
-                case BETTLER,ASSENBETTLER,PLAUDERER:
-                    if(!nextPlayer.isActive()){
-                        for (Team team:game.getTeams()) {
-                            nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber()%game.getMaxNumberOfPlayers()+1)).findFirst().orElse(null);
-                            if(nextPlayer!=null){
+            switch (game.getCurrentHighestCall()) {
+                case BETTLER, ASSENBETTLER, PLAUDERER:
+                    if (!nextPlayer.isActive()) {
+                        for (Team team : game.getTeams()) {
+                            nextPlayer = team.getPlayers().stream().filter(player -> player.getPlayerNumber() == (finalNextPlayer.getPlayerNumber() % game.getMaxNumberOfPlayers() + 1)).findFirst().orElse(null);
+                            if (nextPlayer != null) {
                                 break;
                             }
                         }
@@ -476,10 +475,10 @@ public class GameLogic {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzten
                         //TODO: 4er Schnopsn färbeln einfügen
-                        if(game.getGameType()==GameType._2ERSCHNOPSN) {
+                        if (game.getGameType() == GameType._2ERSCHNOPSN) {
                             defineValidCards2erSchnopsn(game, player1);
                         }
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
                     } else {
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", false))));
@@ -501,7 +500,7 @@ public class GameLogic {
             }
             for (Player player1 : game.getPlayedCards().keySet()) {
                 try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards",cards))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
 
@@ -517,7 +516,6 @@ public class GameLogic {
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                     }
-
 
 
                 } catch (IOException e) {
@@ -552,7 +550,7 @@ public class GameLogic {
             }
             //ok
         } else {
-            awardForPoints4erSchnopsn(game.getTeams().get((calledPlayer.getPlayerNumber()+1) % 2).getPlayers().get(0), game);
+            awardForPoints4erSchnopsn(game.getTeams().get((calledPlayer.getPlayerNumber() + 1) % 2).getPlayers().get(0), game);
         }
 
     }
@@ -583,15 +581,24 @@ public class GameLogic {
     }
 
     public void sendAdditionalData2erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
-        //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
-        if (game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentScore() > 65 || game.getAvailableCards().size() == 0) {
+        if (game.getAvailableCards().size() == 0) {
             game.setFaerbeln(true);
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
+                try {
+                    player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("emptyCardStack", "cardstack is empty"))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
+        //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
+        if (game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentScore() > 65) {
             System.out.println("no cards to ziehen");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben und überprüfen ob Bummerl gegeben wird
-            if (endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore())) {
+            if (endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore())) {
                 //Bummerlstand von Verlierer erhöhen
-                game.getTeams().get((winner.getPlayerNumber()+1) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentBummerl() + 1);
+                game.getTeams().get((winner.getPlayerNumber() + 1) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentBummerl() + 1);
                 //alle Bummerl holen
                 Map<String, Integer> bummerl = new LinkedHashMap<>();
                 for (Team team : game.getTeams()) {
@@ -627,7 +634,7 @@ public class GameLogic {
         } else {
             System.out.println("karte drinnen");
             try {
-                if(!game.isFaerbeln()) {
+                if (!game.isFaerbeln()) {
                     //Get new Card; winner gets the new card before the looser
                     Card card = getRandomCard(game.getAvailableCards(), false);
                     winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
@@ -652,7 +659,7 @@ public class GameLogic {
         }
     }
 
-    public void callPeriod(Game game, ObjectMapper mapper, Player player){
+    public void callPeriod(Game game, ObjectMapper mapper, Player player) {
         if (game.getNumberOfCalledCalls() == 4) {
             //send Data
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
@@ -694,5 +701,52 @@ public class GameLogic {
             }));
             player.setMyTurn(false);
         }
+    }
+
+    public String makeCall2erSchnopsn(Game game, Player player) {
+        List<Card> handCards = game.getPlayerCardMap().get(player);
+        //Becomes true if the first card is found
+        boolean foundFirstCard = false;
+        //To store the first card if it is found
+        Card tempCard = null;
+        //To store the index of the tempCard
+        int foundIndex = 0;
+        //alle Colors der Handkarten hinzufügen
+        Set<Color> colorSet = new TreeSet<>();
+        for (Card card : handCards) {
+            colorSet.add(card.getColor());
+        }
+        for (Color color : colorSet) {
+            for (Card card : handCards) {
+                //adde erste Karte der Farbe
+                if ((card.getName().equals("Dame") || card.getName().equals("König")) && card.getColor() == color && !foundFirstCard) {
+                    foundFirstCard = true;
+                    tempCard = card;
+                    //Wenn erste Karte gefunden und diese die gleiche farbe hat
+                } else if (foundFirstCard && card.getColor() == color) {
+                    switch (tempCard.getName()) {
+                        case "Dame":
+                            if (card.getName().equals("König")) {
+                                if (game.getCurrentTrump() == color) {
+                                    return "40er";
+                                }
+                                return "20er";
+                            }
+                            break;
+                        case "König":
+                            if (card.getName().equals("Dame")) {
+                                if (game.getCurrentTrump() == color) {
+                                    return "40er";
+                                }
+                                return "20er";
+                            }
+                    }
+                }
+
+
+            }
+        }
+
+        return "";
     }
 }

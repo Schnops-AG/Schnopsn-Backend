@@ -11,12 +11,11 @@ import java.io.IOException;
 import java.util.*;
 
 
-
 @RestController
 @RequestMapping("api/v1")
 @CrossOrigin(origins = "http://localhost:3000", methods = {RequestMethod.POST, RequestMethod.GET, RequestMethod.OPTIONS, RequestMethod.HEAD, RequestMethod.PUT})
 public class AccessController {
-    //TODO: port auf 3000 zurücksetzten
+
     private final GameLogic logic = new GameLogic();
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
@@ -39,7 +38,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerName"));
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0,true,null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0, true, 0, null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -54,7 +53,7 @@ public class AccessController {
 
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
-            return ResponseEntity.status(400).body(new Message("error","Empty or invalid playerID: must be type UUID!"));
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerID: must be type UUID!"));
         }
 
 
@@ -120,7 +119,7 @@ public class AccessController {
                 try {
                     // TODO - BUG: .IllegalStateException: The WebSocket session [f] has been closed and no method (apart from close()) may be called on a closed session
                     // if: more players join than allowed in a room
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join",logic.getAllCurrentPlayerNames(game)))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join", logic.getAllCurrentPlayerNames(game)))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -164,7 +163,7 @@ public class AccessController {
         }
         game.getPlayedCards().clear();
 
-        
+
         for (Player player : playerCardMap.keySet()) {
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("forward", "./play"))));
@@ -201,7 +200,7 @@ public class AccessController {
         game.setFaerbeln(true);
         game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("zugedreht",player.getPlayerName()))));
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("zugedreht", player.getPlayerName()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -224,17 +223,67 @@ public class AccessController {
         }
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
-        if(logic.switchTrumpCard(game,player)){
+        if (logic.switchTrumpCard(game, player)) {
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("switchedTrumpCard",player.getPlayerName()))));
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newTrumpCard",game.getAvailableCards().get(game.getAvailableCards().size()-1)))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("switchedTrumpCard", player.getPlayerName()))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newTrumpCard", game.getAvailableCards().get(game.getAvailableCards().size() - 1)))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-           }));
+            }));
             return ResponseEntity.status(200).body(new Message("switchedTrumpCard", "switched successful"));
 
+        }
+
+        return ResponseEntity.status(200).body(new Message("error", "only with trumpf bur"));
+    }
+
+    @PostMapping(path = "/call20er40er")
+    public Object call20er40er(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        String type = logic.makeCall2erSchnopsn(game, player);
+
+
+        if (type.equalsIgnoreCase("20er")) {
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20er", player.getPlayerName()))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+            try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return ResponseEntity.status(200).body(new Message("20er", "call 20er successful"));
+
+        } else if (type.equalsIgnoreCase("40er")) {
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("40er", player.getPlayerName()))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+            try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return ResponseEntity.status(200).body(new Message("40er", "call 40er successful"));
         }
 
         return ResponseEntity.status(200).body(new Message("error", "only with trumpf bur"));
@@ -263,12 +312,12 @@ public class AccessController {
             Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
             Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
             Card card = logic.getCard(color, cardValue);
-            UUID winnerID = logic.makeRightMove(game, card, player); // TODO - Bug: returns null
+            UUID winnerID = logic.makeRightMove(game, card, player);
             logic.sendStingDataToPlayers(game, winnerID);
 
-            if(winnerID == null){
+            if (winnerID == null) {
                 return ResponseEntity.status(200).body(new Message("winner", "waiting for the other(s) to play.."));
-            }else{
+            } else {
                 return ResponseEntity.status(200).body(new Message("winner", GameLogic.findPlayer(storage.getActivePlayers(), winnerID + "")));
             }
 
@@ -285,7 +334,7 @@ public class AccessController {
         game.getTeams().forEach(team -> team.getPlayers().forEach(player -> {
             try {
                 player.setActive(true);
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message","Game is over!"))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "Game is over!"))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -308,8 +357,8 @@ public class AccessController {
                 player.setMyTurn(true);
             }
             try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards",playerCardMap.get(player)))));
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("caller",player.isCaller()))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("caller", player.isCaller()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -350,8 +399,8 @@ public class AccessController {
         for (Player player : playerCardMap.keySet()) {
             game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards",playerCardMap.get(player)))));
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump",realColor))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump", realColor))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -393,7 +442,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setNumberOfCalledCalls(game.getNumberOfCalledCalls() + 1);
         logic.isCallHigher(game, validCall, player);
-        logic.callPeriod(game,mapper,player);
+        logic.callPeriod(game, mapper, player);
 
         game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
