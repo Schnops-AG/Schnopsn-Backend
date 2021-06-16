@@ -233,6 +233,11 @@ public class AccessController {
                     e.printStackTrace();
                 }
             }));
+            try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", game.getPlayerCardMap().get(player)))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return ResponseEntity.status(200).body(new Message("switchedTrumpCard", "switched successful"));
 
         }
