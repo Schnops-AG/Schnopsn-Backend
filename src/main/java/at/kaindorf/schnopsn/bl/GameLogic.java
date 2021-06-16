@@ -253,7 +253,7 @@ public class GameLogic {
     }
 
     //Set points for the players and returns true if the round is over
-    public boolean endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
+    public void endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
         int winnerTeam = 0;
         int currentGameScore;
         if (winner.getPlayerNumber() % 2 != 0) {
@@ -272,11 +272,6 @@ public class GameLogic {
             currentGameScore = game.getTeams().get(winnerTeam).getCurrentGameScore();
             currentGameScore += 1;
             game.getTeams().get(winnerTeam).setCurrentGameScore(currentGameScore);
-        }
-        if (game.getTeams().get(winnerTeam).getCurrentGameScore() > 6) {
-            return true;
-        } else {
-            return false;
         }
     }
 
@@ -474,7 +469,7 @@ public class GameLogic {
                     if (player1.getPlayerNumber() == realNextPlayer.getPlayerNumber()) {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
-                        //priorities setzten
+                        //priorities setzen
                         //TODO: 4er Schnopsn färbeln einfügen
                         if(game.isFaerbeln()){
                             if (game.getGameType() == GameType._2ERSCHNOPSN) {
@@ -494,8 +489,6 @@ public class GameLogic {
             }));
         } else {
             Player winner = GameLogic.findPlayer(storage.getActivePlayers(), winnerID.toString());
-            //System.out.println(winner);
-
 
             int points = 0;
             for (Card card1 : cards) {
@@ -560,6 +553,7 @@ public class GameLogic {
 
     }
 
+
     //checks if the current call is still valid
     public boolean checkCall(Game game, Player calledPlayer) {
         switch (game.getCurrentHighestCall()) {
@@ -598,16 +592,35 @@ public class GameLogic {
         }
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
         if (game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore() > 65) {
-            System.out.println("no cards to ziehen");
+            System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
-            //Punkte vergeben und überprüfen ob Bummerl gegeben wird
-            if (endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore())) {
+            //Punkte vergeben
+            endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore());
+
+            //GameScore zurückschicken
+            Map<UUID, Integer> gamescore = new LinkedHashMap<>();
+            //alle Gamescore holen
+            for (Team team : game.getTeams()) {
+                gamescore.put(team.getPlayers().get(0).getPlayerID(), team.getCurrentGameScore());
+            }
+            //Gamescorestand zurückschicken
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
+                try {
+                    player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gamescore", gamescore))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+
+
+            //überprüfen ob Bummerl gegeben wird
+            if (game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentGameScore()>6) {
                 //Bummerlstand von Verlierer erhöhen
                 game.getTeams().get((winner.getPlayerNumber() + 1) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentBummerl() + 1);
                 //alle Bummerl holen
-                Map<String, Integer> bummerl = new LinkedHashMap<>();
+                Map<UUID, Integer> bummerl = new LinkedHashMap<>();
                 for (Team team : game.getTeams()) {
-                    bummerl.put(team.getPlayers().get(0).getPlayerName(), team.getCurrentBummerl());
+                    bummerl.put(team.getPlayers().get(0).getPlayerID(), team.getCurrentBummerl());
                 }
                 //Bummerlstand zurückschicken
                 game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
@@ -620,21 +633,6 @@ public class GameLogic {
                 for (Team team : game.getTeams()) {
                     team.setCurrentGameScore(0);
                 }
-            } else {
-                //GameScore zurückschicken
-                Map<String, Integer> gamescore = new LinkedHashMap<>();
-                //alle Gamescore holen
-                for (Team team : game.getTeams()) {
-                    gamescore.put(team.getPlayers().get(0).getPlayerName(), team.getCurrentGameScore());
-                }
-                //Gamescorestand zurückschicken
-                game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
-                    try {
-                        player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gamescore", gamescore))));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }));
             }
         } else {
             System.out.println("karte drinnen");
@@ -664,6 +662,7 @@ public class GameLogic {
         }
     }
 
+    //A period of time where everyone can make a call
     public void callPeriod(Game game, ObjectMapper mapper, Player player) {
         if (game.getNumberOfCalledCalls() == 4) {
             //send Data
@@ -708,14 +707,14 @@ public class GameLogic {
         }
     }
 
+    //When someone wants to call a 20er or 40er
     public String makeCall2erSchnopsn(Game game, Player player) {
         List<Card> handCards = game.getPlayerCardMap().get(player);
         //Becomes true if the first card is found
         boolean foundFirstCard = false;
         //To store the first card if it is found
         Card tempCard = null;
-        //To store the index of the tempCard
-        int foundIndex = 0;
+
         //alle Colors der Handkarten hinzufügen
         Set<Color> colorSet = new TreeSet<>();
         for (Card card : handCards) {
@@ -754,6 +753,7 @@ public class GameLogic {
                     }
                 }
             }
+            foundFirstCard=false;
         }
 
         for (Card card:handCards) {
