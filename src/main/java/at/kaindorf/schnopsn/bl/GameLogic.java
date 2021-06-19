@@ -254,10 +254,10 @@ public class GameLogic {
 
     //Set points for the players and returns true if the round is over
     public void endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
-        int winnerTeam = 0;
+        int winnerTeam = 1;
         int currentGameScore;
         if (winner.getPlayerNumber() % 2 != 0) {
-            winnerTeam = 1;
+            winnerTeam = 0;
         }
 
         if (looserPoints == 0) {
@@ -595,7 +595,7 @@ public class GameLogic {
             System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben
-            endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore());
+            endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber()) % 2).getCurrentScore());
 
             //GameScore zurückschicken
             Map<UUID, Integer> gamescore = new LinkedHashMap<>();
