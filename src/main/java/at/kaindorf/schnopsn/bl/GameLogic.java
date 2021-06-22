@@ -759,7 +759,6 @@ public class GameLogic {
         for (Card card:handCards) {
             card.setPriority(true);
         }
-
         return "";
     }
 }
