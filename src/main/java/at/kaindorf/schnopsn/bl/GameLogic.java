@@ -616,7 +616,7 @@ public class GameLogic {
             //überprüfen ob Bummerl gegeben wird
             if (game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentGameScore()>6) {
                 //Bummerlstand von Verlierer erhöhen
-                game.getTeams().get((winner.getPlayerNumber() + 1) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentBummerl() + 1);
+                game.getTeams().get((winner.getPlayerNumber()) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber()) % 2).getCurrentBummerl() + 1);
                 //alle Bummerl holen
                 Map<UUID, Integer> bummerl = new LinkedHashMap<>();
                 for (Team team : game.getTeams()) {
