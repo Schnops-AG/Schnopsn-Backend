@@ -4,6 +4,7 @@ import at.kaindorf.schnopsn.api.GameStorage;
 import at.kaindorf.schnopsn.beans.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.socket.TextMessage;
 
@@ -54,8 +55,8 @@ public class GameLogic {
         List<Player> players = new ArrayList<>();
         players.add(player);
         List<Team> teams = new ArrayList<>();
-        teams.add(new Team(0, 0, 0,0, players));
-        teams.add(new Team(0, 0, 0,0, new ArrayList<>()));
+        teams.add(new Team(0, 0, 0, 0, players));
+        teams.add(new Team(0, 0, 0, 0, new ArrayList<>()));
 
         if (gameType == GameType._2ERSCHNOPSN) {
             game = new Game(UUID.randomUUID(), gameType, null, null, 2, teams, Call.NORMAL, new LinkedHashMap<>(), allCards, 0, 0, new LinkedHashMap<>(), false);
@@ -356,7 +357,7 @@ public class GameLogic {
 
     public void defineValidCards2erSchnopsn(Game game, Player player) {
         //get first played Card
-        Card firstCard = game.getPlayedCards().get(0);
+        Card firstCard = game.getPlayedCards().entrySet().iterator().next().getValue();
         List<Integer> levels = new ArrayList<>();
 
         for (Card card : game.getPlayerCardMap().get(player)) {
@@ -380,6 +381,7 @@ public class GameLogic {
                 levels.add(3);
             }
         }
+
         Collections.sort(levels);
         int minLevel = levels.get(0);
 
@@ -458,7 +460,7 @@ public class GameLogic {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzen
                         //TODO: 4er Schnopsn färbeln einfügen
-                        if(game.isFaerbeln()){
+                        if (game.isFaerbeln()) {
                             if (game.getGameType() == GameType._2ERSCHNOPSN) {
                                 defineValidCards2erSchnopsn(game, player1);
                             }
@@ -486,14 +488,19 @@ public class GameLogic {
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
                     //schicke an den gewinner seinen Stich und an Verlierer, dass der Gewinner den Stich bekommt
                     if (player1.getPlayerID() == winnerID) {
-                        player1.setNumberOfStingsPerRound(player1.getNumberOfStingsPerRound()+1);
+                        player1.setNumberOfStingsPerRound(player1.getNumberOfStingsPerRound() + 1);
                         //Punkte setzten
-                        game.getTeams().get((player1.getPlayerNumber()+1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber()+1) % 2).getCurrentScore() + points);
+                        game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore() + points);
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber()+1) % 2).getCurrentScore()))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
+
+                        for (Card card:game.getPlayerCardMap().get(player1)) {
+                            card.setPriority(true);
+                        }
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
 
 
                     } else {
@@ -578,7 +585,7 @@ public class GameLogic {
             }));
         }
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
-        if (game.getTeams().get((winner.getPlayerNumber()+1) % 2).getCurrentScore() > 65) {
+        if (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
             System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben
@@ -601,7 +608,7 @@ public class GameLogic {
 
 
             //überprüfen ob Bummerl gegeben wird
-            if (game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentGameScore()>6) {
+            if (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentGameScore() > 6) {
                 //Bummerlstand von Verlierer erhöhen
                 game.getTeams().get((winner.getPlayerNumber()) % 2).setCurrentBummerl(game.getTeams().get((winner.getPlayerNumber()) % 2).getCurrentBummerl() + 1);
                 //alle Bummerl holen
@@ -753,10 +760,10 @@ public class GameLogic {
                     }
                 }
             }
-            foundFirstCard=false;
+            foundFirstCard = false;
         }
 
-        for (Card card:handCards) {
+        for (Card card : handCards) {
             card.setPriority(true);
         }
         return "";
