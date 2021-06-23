@@ -272,7 +272,7 @@ public class AccessController {
                 game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+20);
                 game.getTeams().get((player.getPlayerNumber()+1)%2).getPlayers().forEach(player1 -> {
                     try {
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20erPoints", 20))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -301,7 +301,7 @@ public class AccessController {
                 game.getTeams().get(player.getPlayerNumber()+1%2).setCurrentScore(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()+40);
                 game.getTeams().get(player.getPlayerNumber()+1%2).getPlayers().forEach(player1 -> {
                     try {
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20erPoints", 20))));
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -492,16 +492,14 @@ public class GameLogic {
                         player1.setNumberOfStingsPerRound(player1.getNumberOfStingsPerRound() + 1);
                         //Punkte setzten
                         game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore() + points);
+                        game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore() + game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getBuffer());
+                        game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setBuffer(0);
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
 
-                        for (Card card:game.getPlayerCardMap().get(player1)) {
-                            card.setPriority(true);
-                        }
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
 
                         //checken ob zudreher alle Stiche macht
                         /*if(game.getGameType()== GameType._2ERSCHNOPSN && game.isFaerbeln() && zudreher!=null){
@@ -518,6 +516,12 @@ public class GameLogic {
                         player1.setMyTurn(false);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                     }
+
+                    for (Card card:game.getPlayerCardMap().get(player1)) {
+                        card.setPriority(true);
+                    }
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
+
 
 
                 } catch (IOException e) {
