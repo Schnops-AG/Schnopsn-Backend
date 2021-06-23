@@ -12,7 +12,6 @@ import java.util.TreeSet;
 public class GameLogicTestClass {
     //When someone wants to call a 20er or 40er
     public String makeCall2erSchnopsn(List<Card> handCards, Color currentTrump) {
-       // List<Card> handCards = game.getPlayerCardMap().get(player);
         //Becomes true if the first card is found
         boolean foundFirstCard = false;
         //To store the first card if it is found
