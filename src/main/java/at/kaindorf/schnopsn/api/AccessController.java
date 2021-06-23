@@ -322,7 +322,7 @@ public class AccessController {
             return ResponseEntity.status(200).body(new Message("40er", "call 40er successful"));
         }
 
-        return ResponseEntity.status(200).body(new Message("error", "only with trumpf bur"));
+        return ResponseEntity.status(400).body(new Message("error", "only with trumpf bur"));
     }
 
 
