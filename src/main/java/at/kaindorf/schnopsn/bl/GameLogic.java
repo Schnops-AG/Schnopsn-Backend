@@ -20,29 +20,29 @@ public class GameLogic {
 
     public GameLogic() {
         try {
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KARO, false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KARO, false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.KARO, false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KARO, false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KARO, false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KARO, true));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KARO, true));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.KARO, true));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KARO, true));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KARO, true));
 
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KREUZ, false));
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KREUZ, false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.KREUZ, false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KREUZ, false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KREUZ, false));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KREUZ, true));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KREUZ, true));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.KREUZ, true));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.KREUZ, true));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.KREUZ, true));
 
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.PICK, false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.PICK, false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.PICK, false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.PICK, false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.PICK, false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.PICK, true));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.PICK, true));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.PICK, true));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.PICK, true));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.PICK, true));
 
-            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.HERZ, false));
-            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.HERZ, false));
-            allCards.add(new Card("König", 4, new URL("http://link"), Color.HERZ, false));
-            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.HERZ, false));
-            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.HERZ, false));
+            allCards.add(new Card("Bur", 2, new URL("http://link"), Color.HERZ, true));
+            allCards.add(new Card("Dame", 3, new URL("http://link"), Color.HERZ, true));
+            allCards.add(new Card("König", 4, new URL("http://link"), Color.HERZ, true));
+            allCards.add(new Card("Zehner", 10, new URL("http://link"), Color.HERZ, true));
+            allCards.add(new Card("Ass", 11, new URL("http://link"), Color.HERZ, true));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
@@ -157,16 +157,9 @@ public class GameLogic {
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump, Game game) {
         List<Card> playCards = new ArrayList<>();
 
-        //System.out.println(playMap);
-
         for (Player player : playMap.keySet()) {
-            // System.out.println(player);
-            //System.out.println(playMap.get(player));
             playCards.add(playMap.get(player));
         }
-
-
-        //System.out.println(playCards);
 
         //If Zehnergang then Ass has value 1
         if (game.getCurrentHighestCall() == Call.ZEHNERGANG) {
@@ -178,8 +171,6 @@ public class GameLogic {
         }
 
         Color firstColor = playCards.get(0).getColor();
-
-        //System.out.println(playCards);
         int count = 0;
         while (playCards.size() > 1) {
             Card temp = playCards.get(count);
@@ -204,13 +195,9 @@ public class GameLogic {
             }
             count++;
         }
-        //System.out.println(playCards);
-        //System.out.println("in for");
 
         for (Player player : playMap.keySet()) {
-            //System.out.println(playMap.get(player));
             if (playMap.get(player) == playCards.get(0)) {
-                //System.out.println(player.getPlayerID());
                 return player.getPlayerID();
             }
         }
@@ -646,10 +633,23 @@ public class GameLogic {
                     game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
                     game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
                 }
+                else{
+                    if(getAllHandCrads(game)==0){
+
+                    }
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public int getAllHandCrads(Game game){
+        int anz =0;
+        for (Player player: game.getPlayerCardMap().keySet()) {
+            anz+=game.getPlayerCardMap().get(player).size();
+        }
+        return anz;
     }
 
     public void sendWinnerName(Game game, ObjectMapper mapper, Player player1) {
