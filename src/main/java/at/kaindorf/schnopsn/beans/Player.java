@@ -19,12 +19,14 @@ public class Player {
     private boolean myTurn;
     private int numberOfStingsPerRound;
     private boolean active;
+    //wer zudreht
+    private boolean zudreher;
     //temp speicher für 20er 40er
 
     @JsonIgnore
     private WebSocketSession session;
 
-    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, boolean active, WebSocketSession session) {
+    public Player(UUID playerID, String playerName, boolean caller, boolean playsCall, int playerNumber, boolean admin, boolean myTurn, int numberOfStingsPerRound, boolean active, boolean zudreher, WebSocketSession session) {
         this.playerID = playerID;
         this.playerName = playerName;
         this.caller = caller;
@@ -34,6 +36,7 @@ public class Player {
         this.myTurn = myTurn;
         this.numberOfStingsPerRound = numberOfStingsPerRound;
         this.active = active;
+        this.zudreher = zudreher;
         this.session = session;
     }
 
@@ -122,6 +125,14 @@ public class Player {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public boolean isZudreher() {
+        return zudreher;
+    }
+
+    public void setZudreher(boolean zudreher) {
+        this.zudreher = zudreher;
     }
 
     public WebSocketSession getSession() {

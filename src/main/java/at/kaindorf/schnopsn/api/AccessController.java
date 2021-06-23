@@ -39,7 +39,7 @@ public class AccessController {
         if (playerName == null || playerName.length() <= 0) {
             return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerName"));
         }
-        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0, true, null);
+        Player newPlayer = new Player(UUID.randomUUID(), playerName, false, false, 0, false, false, 0, true,false, null);
         storage.getActivePlayers().add(newPlayer);
         return ResponseEntity.status(200).body(newPlayer);
     }
@@ -166,6 +166,7 @@ public class AccessController {
 
 
         for (Player player : playerCardMap.keySet()) {
+            player.setZudreher(false);
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("forward", "./play"))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
@@ -199,6 +200,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
         game.setFaerbeln(true);
+        player.setZudreher(true);
         game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("zugedreht", player.getPlayerName()))));
@@ -246,7 +248,7 @@ public class AccessController {
     }
 
     @PostMapping(path = "/call20er40er")
-    public Object call20er40er(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID) {
+    public Object call20er40er(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID,@RequestParam("type") String typeID) {
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
             return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");

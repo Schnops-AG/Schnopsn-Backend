@@ -483,6 +483,7 @@ public class GameLogic {
             for (Card card1 : cards) {
                 points += card1.getValue();
             }
+            Player zudreher = getZudreher(game);
             for (Player player1 : game.getPlayedCards().keySet()) {
                 try {
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("playedCards", cards))));
@@ -501,6 +502,15 @@ public class GameLogic {
                             card.setPriority(true);
                         }
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
+
+                        //checken ob zudreher alle Stiche macht
+                        /*if(game.getGameType()== GameType._2ERSCHNOPSN && game.isFaerbeln() && zudreher!=null){
+                            System.out.println("es gibt zudreher");
+                            if(zudreher.getPlayerID()!= player1.getPlayerID()){
+                                System.out.println("zudreher hat verloren");
+                                game.getTeams().get((player1.getPlayerNumber()+1)%2).setCurrentScore(66);
+                            }
+                        }*/
 
 
                     } else {
@@ -525,6 +535,17 @@ public class GameLogic {
             game.getPlayedCards().clear();
 
         }
+    }
+
+    public Player getZudreher(Game game){
+        for (Team team:game.getTeams()) {
+            for (Player player:team.getPlayers()) {
+                if(player.isZudreher()){
+                    return player;
+                }
+            }
+        }
+        return null;
     }
 
     public void sendAdditionalData4erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
@@ -575,7 +596,6 @@ public class GameLogic {
 
     public void sendAdditionalData2erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
         if (game.getAvailableCards().size() == 0) {
-            game.setFaerbeln(true);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
                 try {
                     player4.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("emptyCardStack", "cardstack is empty"))));
@@ -584,8 +604,14 @@ public class GameLogic {
                 }
             }));
         }
-        //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat
-        if (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
+        System.out.println(getAllHandCrads(game));
+        //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat, oder letzter stich
+        if ((game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) || (getAllHandCrads(game)==0)) {
+            System.out.println("round over");
+            if(winner.isZudreher() && game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentScore()<66){
+                winner = game.getTeams().get(winner.getPlayerNumber()%2).getPlayers().get(0);
+                game.getTeams().get(winner.getPlayerNumber()%2).setCurrentScore(66);
+            }
             System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben
@@ -629,6 +655,7 @@ public class GameLogic {
                 }
             }
         } else {
+
             System.out.println("karte drinnen");
             try {
                 if (!game.isFaerbeln()) {
@@ -639,10 +666,8 @@ public class GameLogic {
                     card = getRandomCard(game.getAvailableCards(), false);
                     game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
                     game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
-                }
-                else{
-                    if(getAllHandCrads(game)==0){
-
+                    if(game.getAvailableCards().size()==0){
+                        game.setFaerbeln(true);
                     }
                 }
             } catch (IOException e) {
