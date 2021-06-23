@@ -15,6 +15,7 @@ public class GameLogicTest {
         int a = 6, b = 2;
         assertEquals(2, logic.test(a,b));
     }*/
+
     public void makeCall2erSchnopsnTest(){
 
     }
