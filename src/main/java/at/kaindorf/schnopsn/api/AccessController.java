@@ -294,12 +294,12 @@ public class AccessController {
             return ResponseEntity.status(200).body(new Message("20er", "call 20er successful"));
 
         } else if (type.equalsIgnoreCase("40er")) {
-            if(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()==0){
-                game.getTeams().get(player.getPlayerNumber()+1%2).setBuffer(game.getTeams().get(player.getPlayerNumber()+1%2).getBuffer()+40);
+            if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()==0){
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setBuffer(game.getTeams().get((player.getPlayerNumber()+1)%2).getBuffer()+40);
             }
             else{
-                game.getTeams().get(player.getPlayerNumber()+1%2).setCurrentScore(game.getTeams().get(player.getPlayerNumber()+1%2).getCurrentScore()+40);
-                game.getTeams().get(player.getPlayerNumber()+1%2).getPlayers().forEach(player1 -> {
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+40);
+                game.getTeams().get((player.getPlayerNumber()+1)%2).getPlayers().forEach(player1 -> {
                     try {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
                     } catch (IOException e) {
