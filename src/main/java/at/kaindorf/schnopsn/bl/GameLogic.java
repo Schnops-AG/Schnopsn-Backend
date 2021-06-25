@@ -274,6 +274,16 @@ public class GameLogic {
         return allNames;
     }
 
+    public Player getActualCaller(Game game){
+        for (Team team: game.getTeams()) {
+            for (Player player: team.getPlayers()) {
+                if(player.isCaller()){
+                    return player;
+                }
+            }
+        }
+        return null;
+    }
     //define which player is the next one who is allowed to call trump
     public void defineCaller(Game game) {
         int oldCallerNumber = 0;
@@ -283,9 +293,16 @@ public class GameLogic {
                 break;
             }
         }
-        final int finalOldCallerNumber = oldCallerNumber;
-        game.getTeams().forEach(team -> team.getPlayers().stream().filter(Player::isCaller).findFirst().get().setCaller(false));
-        game.getTeams().forEach(team -> team.getPlayers().stream().filter(player -> player.getPlayerNumber() == finalOldCallerNumber % 4 + 1).findFirst().get().setCaller(true));
+        for (Team team: game.getTeams()) {
+            for (Player player:team.getPlayers()) {
+                if(player.isCaller()){
+                    player.setCaller(false);
+                }
+                if(player.getPlayerNumber()== (oldCallerNumber%game.getMaxNumberOfPlayers())+1){
+                    player.setCaller(true);
+                }
+            }
+        }
     }
 
     //give Cards for each player
@@ -610,13 +627,34 @@ public class GameLogic {
         }
         System.out.println(getAllHandCrads(game));
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat, oder letzter stich
+        if (!checkIfRoundOver(game,mapper,winner)) {
+            try {
+                if (!game.isFaerbeln()) {
+                    //Get new Card; winner gets the new card before the looser
+                    Card card = getRandomCard(game.getAvailableCards(), false);
+                    winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                    game.getPlayerCardMap().get(winner).add(card);
+                    card = getRandomCard(game.getAvailableCards(), false);
+                    game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
+                    game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
+                    if(game.getAvailableCards().size()==0){
+                        game.setFaerbeln(true);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public boolean checkIfRoundOver(Game game, ObjectMapper mapper, Player winner){
         if ((game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) || (getAllHandCrads(game)==0)) {
-            System.out.println("round over");
+            //System.out.println("round over");
             if(winner.isZudreher() && game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentScore()<66){
                 winner = game.getTeams().get(winner.getPlayerNumber()%2).getPlayers().get(0);
                 game.getTeams().get(winner.getPlayerNumber()%2).setCurrentScore(66);
             }
-            System.out.println("no cards to pull");
+            //System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben
             endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber()) % 2).getCurrentScore());
@@ -658,26 +696,9 @@ public class GameLogic {
                     team.setCurrentGameScore(0);
                 }
             }
-        } else {
-
-            System.out.println("karte drinnen");
-            try {
-                if (!game.isFaerbeln()) {
-                    //Get new Card; winner gets the new card before the looser
-                    Card card = getRandomCard(game.getAvailableCards(), false);
-                    winner.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
-                    game.getPlayerCardMap().get(winner).add(card);
-                    card = getRandomCard(game.getAvailableCards(), false);
-                    game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
-                    game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
-                    if(game.getAvailableCards().size()==0){
-                        game.setFaerbeln(true);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            return true;
         }
+        return false;
     }
 
     public int getAllHandCrads(Game game){
@@ -744,7 +765,7 @@ public class GameLogic {
     }
 
     //When someone wants to call a 20er or 40er
-    public String makeCall2erSchnopsn(Game game, Player player) {
+    public int makeCall2erSchnopsn(Game game, Player player) {
         List<Card> handCards = game.getPlayerCardMap().get(player);
         //Becomes true if the first card is found
         boolean foundFirstCard = false;
@@ -771,9 +792,9 @@ public class GameLogic {
                                 tempCard.setPriority(true);
                                 card.setPriority(true);
                                 if (game.getCurrentTrump() == color) {
-                                    return "40er";
+                                    return 40;
                                 }
-                                return "20er";
+                                return 20;
                             }
                             break;
                         case "König":
@@ -781,9 +802,9 @@ public class GameLogic {
                                 tempCard.setPriority(true);
                                 card.setPriority(true);
                                 if (game.getCurrentTrump() == color) {
-                                    return "40er";
+                                    return 40;
                                 }
-                                return "20er";
+                                return 20;
                             }
                             break;
                     }
@@ -795,6 +816,6 @@ public class GameLogic {
         for (Card card : handCards) {
             card.setPriority(true);
         }
-        return "";
+        return 0;
     }
 }

@@ -21,16 +21,13 @@ public class AccessController {
     private ObjectMapper mapper = new ObjectMapper();
 
     // TODO: nach jedem Stich buffer überprüfen
-    //TODO setAktive: if Call e.g. BETTLER then only three players //finished
-    //TODO: KONTRA myTurn first on caller true //finished
     //TODO: check three cases of SCHNAPSER
-    //TODO: zudrehen 2er Schnopsn //finished
-    //TODO: färbelpflicht 2erSchnopsn // finsihed
     //TODO:färeblpflicht + stechpflicht 4er Schnopsn
     //TODO: Frontend besprechen: Farbenringerl, available Calls
     //TODO: handkarten in sendstingData anschauen
-    //TODO: austauschen 2erSchnopsn //finished
     //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten)
+    //TODO: 20er40er schauen ob fertig (von sendStingData Methode)
+    //TODO: JavaDocs machen
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -67,19 +64,6 @@ public class AccessController {
             player.setPlayerNumber(1);
             Game newGame = logic.createGame(realGameType, player);
             storage.getActiveGames().add(newGame);
-
-            // Ab hier nur getestet
-           /* Player newPlayer = new Player(UUID.randomUUID(), "Test", false, false, 0, false, false,0, null);
-            storage.getActivePlayers().add(newPlayer);
-            newGame.getTeams().get(1).getPlayers().add(newPlayer);
-
-            try {
-                String json = mapper.writeValueAsString(logic.giveOutCards(newGame,5).get(player));
-                System.out.println((mapper.writeValueAsString(new Message("cards", logic.giveOutCards(newGame,5).get(player)))));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }*/
-            //Ende Testung
 
             return ResponseEntity.status(200).body(newGame);
         } catch (NullPointerException e) {
@@ -164,9 +148,16 @@ public class AccessController {
         }
         game.getPlayedCards().clear();
 
-
+        Player caller=logic.getActualCaller(game);
         for (Player player : playerCardMap.keySet()) {
             player.setZudreher(false);
+
+            if(player.getPlayerID()== caller.getPlayerID()){
+                player.setMyTurn(true);
+            }
+            else{
+                player.setMyTurn(false);
+            }
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("forward", "./play"))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
@@ -181,7 +172,12 @@ public class AccessController {
 //                player.setMyTurn(true);
 //            }
         }
-        //neuen playsCall setzten
+        logic.defineCaller(game);
+        System.out.println("nach defineCaller");
+        for (Player player : playerCardMap.keySet()) {
+            System.out.println(player.isCaller());
+        }
+
 
         return ResponseEntity.status(200).body("Hurray!");
     }
@@ -260,69 +256,46 @@ public class AccessController {
         }
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
-        String type = logic.makeCall2erSchnopsn(game, player);
+        int type = logic.makeCall2erSchnopsn(game, player);
 
-
-        if (type.equalsIgnoreCase("20er")) {
-            //check ob buffer
-            if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()==0){
-                game.getTeams().get((player.getPlayerNumber()+1)%2).setBuffer(game.getTeams().get((player.getPlayerNumber()+1)%2).getBuffer()+20);
+        if(type!=0){
+            //Buffer oder gleich zu Stichpunkten
+            if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()==0) {
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setBuffer(game.getTeams().get((player.getPlayerNumber()+1)%2).getBuffer()+type);
             }
             else{
-                game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+20);
-                game.getTeams().get((player.getPlayerNumber()+1)%2).getPlayers().forEach(player1 -> {
-                    try {
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
+                game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+type);
             }
-
+            //Sag allen der hat was angesagt
+            Color color = game.getPlayerCardMap().get(player).stream().filter(card ->  card.isPriority()).findFirst().get().getColor();
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                System.out.println(player1.isCaller());
                 try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("20er", player.getPlayerName()))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message(type+"er mit "+color, player.getPlayerName()))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }));
+            //schick ihm seine neuen stichpunkte und priorityCards
             try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
+                //automatisch nachrichten zum beenden der Runde schicken und priorities zurückstellen
+                if(logic.checkIfRoundOver(game,mapper,player)){
+                    game.getPlayerCardMap().get(player).stream().forEach(card -> {
+                        card.setPriority(true);
+                    });
+                }
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            //schau ob mit ansage die Runde vorbei ist
+
             return ResponseEntity.status(200).body(new Message("20er", "call 20er successful"));
-
-        } else if (type.equalsIgnoreCase("40er")) {
-            if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()==0){
-                game.getTeams().get((player.getPlayerNumber()+1)%2).setBuffer(game.getTeams().get((player.getPlayerNumber()+1)%2).getBuffer()+40);
-            }
-            else{
-                game.getTeams().get((player.getPlayerNumber()+1)%2).setCurrentScore(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()+40);
-                game.getTeams().get((player.getPlayerNumber()+1)%2).getPlayers().forEach(player1 -> {
-                    try {
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
-            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
-                try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("40er", player.getPlayerName()))));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }));
-            try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return ResponseEntity.status(200).body(new Message("40er", "call 40er successful"));
         }
 
-        return ResponseEntity.status(400).body(new Message("error", "only with trumpf bur"));
+
+        return ResponseEntity.status(400).body(new Message("error", "kein König und Dame von gleicher Farbe vorhanden"));
     }
 
 
