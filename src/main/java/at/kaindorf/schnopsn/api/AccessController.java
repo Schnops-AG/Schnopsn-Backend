@@ -28,6 +28,8 @@ public class AccessController {
     //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten)
     //TODO: 20er40er schauen ob fertig (von sendStingData Methode)
     //TODO: JavaDocs machen
+    //TODO: aufdehen (4erSchnopsn) - random card
+    //TODO: priority bei calls (Schnapser, Gang, ...)
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -366,6 +368,7 @@ public class AccessController {
                 player.setMyTurn(true);
             }
             try {
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("forward", "./play"))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("caller", player.isCaller()))));
             } catch (IOException e) {
@@ -408,7 +411,7 @@ public class AccessController {
         for (Player player : playerCardMap.keySet()) {
             game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", playerCardMap.get(player)))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", game.getPlayerCardMap().get(player))))); // return all 5 cards
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump", realColor))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
             } catch (IOException e) {
@@ -416,7 +419,7 @@ public class AccessController {
             }
         }
 
-        return ResponseEntity.status(200).body("started round successfully");
+        return ResponseEntity.status(200).body(new Message("info", "started round successfully"));
     }
 
     @PostMapping(path = "/makeCall")
@@ -463,6 +466,11 @@ public class AccessController {
         }));
 
         return ResponseEntity.status(200).body(new Message("info", "status: 200"));
+    }
+
+    @GetMapping(path = "/getAvailableCalls")
+    public Object getAvailableCalls(){
+        return ResponseEntity.status(200).body(new Message("availableCalls", Call.values()));
     }
 
 }

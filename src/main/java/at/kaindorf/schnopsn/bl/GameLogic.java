@@ -340,7 +340,7 @@ public class GameLogic {
             availableCards.clear();
             return card;
         } else {
-            index = rand.nextInt(availableCards.size() - 1);
+            index = rand.nextInt(availableCards.size() - 1); // TODO - BUG - java.lang.IllegalArgumentException: bound must be positive]
         }
         Card card = availableCards.get(index);
         availableCards.remove(index);
