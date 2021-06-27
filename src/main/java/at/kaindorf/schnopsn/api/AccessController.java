@@ -487,6 +487,14 @@ public class AccessController {
         if(!callPeriod){
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
+                if(player1.isPlaysCall()){
+                    player1.setMyTurn(true);
+
+                }
+                else{
+                    player1.setMyTurn(false);
+                }
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
             } catch (IOException e) {
                 e.printStackTrace();
