@@ -340,7 +340,7 @@ public class GameLogic {
             availableCards.clear();
             return card;
         } else {
-            index = rand.nextInt(availableCards.size() - 1); // TODO - BUG - java.lang.IllegalArgumentException: bound must be positive]
+            index = rand.nextInt(availableCards.size() - 1);
         }
         Card card = availableCards.get(index);
         availableCards.remove(index);
@@ -645,7 +645,7 @@ public class GameLogic {
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
-            calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get(); // TODO
+            calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get();
         }
         //makeRightMove
         //check if succeeds
@@ -802,7 +802,7 @@ public class GameLogic {
                         case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
                         case KONTRABAUER, KONTRASCHNAPSER -> {
                             player1.setMyTurn(false);
-                            game.getTeams().forEach(team2 -> team.getPlayers().forEach(player2 -> {
+                            game.getTeams().forEach(team2 -> team2.getPlayers().forEach(player2 -> {
                                 if (player2.isCaller()) {
                                     player2.setMyTurn(true);
                                 }
@@ -822,16 +822,20 @@ public class GameLogic {
             defineCaller(game);
             return false;
         } else {
+            Player turnPlayer=player;
+            for (Team team : game.getTeams()) {
+                turnPlayer = team.getPlayers().stream().filter(Player::isMyTurn).findFirst().orElse(null);
+                if (turnPlayer != null) {
+                    break;
+                }
+            }
+            final Player realTurnPlayer = turnPlayer;
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
-                if (player1.isMyTurn()) {
-                    game.getTeams().forEach(team1 -> team.getPlayers().forEach(player2 -> {
-                        if (player2.getPlayerNumber() == (player1.getPlayerNumber() % 4) + 1) {
-                            player2.setMyTurn(true);
-                        }
-                    }));
-                    player1.setMyTurn(false);
+                if(player1.getPlayerNumber() == (realTurnPlayer.getPlayerNumber() % 4) + 1){
+                    player1.setMyTurn(true);
                 }
             }));
+            player.setMyTurn(false);
             return true;
         }
     }

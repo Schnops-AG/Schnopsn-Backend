@@ -22,15 +22,9 @@ public class AccessController {
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
 
-    // TODO: nach jedem Stich buffer überprüfen //finished
-    //TODO: check three cases of SCHNAPSER
-    //TODO:färeblpflicht + stechpflicht 4er Schnopsn //finished
-    //TODO: Frontend besprechen: Farbenringerl, available Calls
-    //TODO: handkarten in sendstingData anschauen // finished
-    //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten) //finished
-    //TODO: 20er40er schauen ob fertig (von sendStingData Methode) //finished
     //TODO: JavaDocs machen
-    //TODO: aufdehen (4erSchnopsn) - random card //finished
+    //TODO: check three cases of SCHNAPSER
+    //TODO: Frontend besprechen: Farbenringerl, available Calls
     //TODO: priority bei calls (Schnapser, Gang, ...) //finished
 
     @PostMapping(path = "/createPlayer")
@@ -106,7 +100,6 @@ public class AccessController {
             //System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
-                    // TODO - BUG: .IllegalStateException: The WebSocket session [f] has been closed and no method (apart from close()) may be called on a closed session
                     // if: more players join than allowed in a room
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join", logic.getAllCurrentPlayerNames(game)))));
                 } catch (IOException e) {
@@ -137,7 +130,7 @@ public class AccessController {
 
         //Karten Methode 5 zurück
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-
+        game.getPlayerCardMap().clear();
         Map<Player, List<Card>> playerCardMap;
         playerCardMap = logic.giveOutCards(game, 5);
         game.setPlayerCardMap(playerCardMap);
@@ -177,10 +170,6 @@ public class AccessController {
 //            }
         }
         logic.defineCaller(game);
-        System.out.println("nach defineCaller");
-        for (Player player : playerCardMap.keySet()) {
-            System.out.println(player.isCaller());
-        }
 
 
         return ResponseEntity.status(200).body("Hurray!");
@@ -361,10 +350,14 @@ public class AccessController {
     public Object getCards4erSchnopsn(@RequestParam("gameID") String gameID) {
         //Serverintern: jeder bekommt seine 5 Karten -> geschickt werden nur die ersten 3; dann Trumpf die letzten 2
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
+        game.getPlayerCardMap().clear();
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
         game.setPlayerCardMap(playerCardMap);
+        game.getPlayedCards().clear();
         for (Player player : game.getPlayerCardMap().keySet()) {
             player.setActive(true);
+            player.setMyTurn(false);
+            player.setPlaysCall(false);
             player.setNumberOfStingsPerRound(0);
             if (player.isCaller()) {
                 player.setMyTurn(true);
@@ -427,6 +420,7 @@ public class AccessController {
             game.setCurrentTrump(realColor);
         }
         playerTrump.setPlaysCall(true);
+        playerTrump.setMyTurn(true);
         for (Player player : playerCardMap.keySet()) {
             game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
@@ -475,30 +469,26 @@ public class AccessController {
         logic.isCallHigher(game, validCall, player);
         boolean callPeriod= logic.callPeriod(game, mapper, player);
 
-        game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
-            try {
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("highestCall", game.getCurrentHighestCall()))));
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("callTurn", player1.isMyTurn()))));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }));
+
         //Benachrichtigen dass keine Calls mehr gemacht werden
         if(!callPeriod){
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
-                if(player1.isPlaysCall()){
-                    player1.setMyTurn(true);
-
-                }
-                else{
-                    player1.setMyTurn(false);
-                }
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            }));
+        }
+        else{
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("highestCall", game.getCurrentHighestCall()))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("callTurn", player1.isMyTurn()))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }));
         }
 
