@@ -111,7 +111,7 @@ public class GameLogic {
                 }
 
             } catch (NoSuchElementException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
                 //noch keiner was angesagt
             }
             player.setPlaysCall(true);
@@ -815,6 +815,9 @@ public class GameLogic {
                 }
 
             }));
+            if(!trumpNeeded(game.getCurrentHighestCall())){
+                game.setCurrentTrump(null);
+            }
             //deshalb weil wir den aktuellen hier noch brauchen
             defineCaller(game);
             return false;

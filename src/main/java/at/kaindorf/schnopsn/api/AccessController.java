@@ -426,12 +426,13 @@ public class AccessController {
             }
             game.setCurrentTrump(realColor);
         }
+        playerTrump.setPlaysCall(true);
         for (Player player : playerCardMap.keySet()) {
             game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", game.getPlayerCardMap().get(player))))); // return all 5 cards
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump", trumpColorCard))));
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("callTurn", player.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -477,7 +478,7 @@ public class AccessController {
         game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("highestCall", game.getCurrentHighestCall()))));
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("callTurn", player1.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
