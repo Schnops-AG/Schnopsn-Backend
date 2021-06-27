@@ -799,7 +799,7 @@ public class GameLogic {
                     player1.setMyTurn(true);
 
                     switch (game.getCurrentHighestCall()) {
-                        case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get(player1.getPlayerNumber() % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
+                        case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get((player1.getPlayerNumber()+1) % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
                         case KONTRABAUER, KONTRASCHNAPSER -> {
                             player1.setMyTurn(false);
                             game.getTeams().forEach(team2 -> team2.getPlayers().forEach(player2 -> {

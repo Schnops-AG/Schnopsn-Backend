@@ -496,7 +496,21 @@ public class AccessController {
     }
 
     @GetMapping(path = "/getAvailableCalls")
-    public Object getAvailableCalls(){
+    public Object getAvailableCalls(@RequestParam("gameID") String gameID, @RequestParam String playerID){
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
+        }
+        // if invalid gameID
+        if (gameID == null || gameID.length() != 36) {
+            return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
+        }
+
+        Player player = GameLogic.findPlayer(storage.getActivePlayers(), playerID);
+        if (player == null) {
+            return ResponseEntity.status(404).body("No player found");
+        }
+        Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         return ResponseEntity.status(200).body(new Message("availableCalls", Call.values()));
     }
 
