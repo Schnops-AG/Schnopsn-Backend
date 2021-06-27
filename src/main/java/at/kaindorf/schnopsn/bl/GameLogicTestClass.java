@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 public class GameLogicTestClass {
     //When someone wants to call a 20er or 40er
-    public String makeCall2erSchnopsn(List<Card> handCards, Color currentTrump) {
+    public int makeCall2erSchnopsn(List<Card> handCards, Color currentTrump) {
         //Becomes true if the first card is found
         boolean foundFirstCard = false;
         //To store the first card if it is found
@@ -37,9 +37,9 @@ public class GameLogicTestClass {
                                 tempCard.setPriority(true);
                                 card.setPriority(true);
                                 if (currentTrump == color) {
-                                    return "40er";
+                                    return 40;
                                 }
-                                return "20er";
+                                return 20;
                             }
                             break;
                         case "König":
@@ -47,9 +47,9 @@ public class GameLogicTestClass {
                                 tempCard.setPriority(true);
                                 card.setPriority(true);
                                 if (currentTrump == color) {
-                                    return "40er";
+                                    return 40;
                                 }
-                                return "20er";
+                                return 20;
                             }
                             break;
                     }
@@ -61,6 +61,6 @@ public class GameLogicTestClass {
         for (Card card : handCards) {
             card.setPriority(true);
         }
-        return "";
+        return 0;
     }
 }

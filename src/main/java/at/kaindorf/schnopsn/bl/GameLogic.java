@@ -374,6 +374,7 @@ public class GameLogic {
 
     public void defineValidCards2erSchnopsn(Game game, Player player) {
         //get first played Card
+        //Level3: alle Karten; Level2: Trumpfkarten; Level1:gleichfarbige Karten
         Card firstCard = game.getPlayedCards().entrySet().iterator().next().getValue();
         List<Integer> levels = new ArrayList<>();
 
@@ -428,6 +429,73 @@ public class GameLogic {
         }
     }
 
+    public void defineValidCards4erSchnopsn(Game game, Player player){
+        //Level3: alle Karten; Level2:trumpfkarten; Level1:Gleichfarbige Karten; Level0: Gleichfarbige Karten mit höherem value
+        Card firstCard = game.getPlayedCards().entrySet().iterator().next().getValue();
+        List<Integer> levels = new ArrayList<>();
+
+        for (Card card : game.getPlayerCardMap().get(player)) {
+            //erstes Karte false dann überprüfen ob ok
+            card.setPriority(false);
+
+            //Wenn nichts ausgespielt
+            if (firstCard == null) {
+                levels.add(3);
+            }
+            else if(card.getColor() == firstCard.getColor() && card.getValue()> firstCard.getValue()){
+                levels.add(0);
+            }
+            //Wenn gleiche farbe
+            else if (card.getColor() == firstCard.getColor()) {
+                levels.add(1);
+            }
+            //Wenn Trumpf
+            else if (card.getColor() != firstCard.getColor() && card.getColor() == game.getCurrentTrump()) {
+                levels.add(2);
+            }
+            //sonst irgendeine
+            else {
+                levels.add(3);
+            }
+        }
+        Collections.sort(levels);
+        int minLevel = levels.get(0);
+
+        switch (minLevel) {
+            case 3:
+                //Alle Karten
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    card.setPriority(true);
+                }
+                break;
+            case 2:
+                //Trumpfkarten
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    if (card.getColor() != firstCard.getColor() && card.getColor() == game.getCurrentTrump()) {
+                        card.setPriority(true);
+                    }
+                }
+                break;
+            case 1:
+                //Karten mit gleicher Farbe
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    if (card.getColor() == firstCard.getColor()) {
+                        card.setPriority(true);
+                    }
+                }
+                break;
+            case 0:
+                //Karten mit gleicher Farbe und höherem value
+                for (Card card : game.getPlayerCardMap().get(player)) {
+                    if (card.getColor() == firstCard.getColor() && card.getValue()> firstCard.getValue()) {
+                        card.setPriority(true);
+                    }
+                }
+                break;
+        }
+
+    }
+
     //handkarten anschauen
     //sendData toPlayers after one has played out a card
     public void sendStingDataToPlayers(Game game, UUID winnerID) {
@@ -476,10 +544,13 @@ public class GameLogic {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzen
-                        //TODO: 4er Schnopsn färbeln einfügen
+
                         if (game.isFaerbeln()) {
                             if (game.getGameType() == GameType._2ERSCHNOPSN) {
                                 defineValidCards2erSchnopsn(game, player1);
+                            }
+                            else if(game.getGameType() == GameType._4ERSCHNOPSN){
+                                defineValidCards4erSchnopsn(game, player1);
                             }
                             player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
                         }
@@ -551,7 +622,7 @@ public class GameLogic {
             }
             //beim 4er Schnopsn überprüfen ob ansage durchgeht und Punkte vergeben
             else if (game.getGameType() == GameType._4ERSCHNOPSN) {
-                sendAdditionalData4erSchnopsn(game, mapper, winner);
+                //sendAdditionalData4erSchnopsn(game, mapper, winner);
             }
             game.getPlayedCards().clear();
 
@@ -720,7 +791,7 @@ public class GameLogic {
     }
 
     //A period of time where everyone can make a call
-    public void callPeriod(Game game, ObjectMapper mapper, Player player) {
+    public boolean callPeriod(Game game, ObjectMapper mapper, Player player) {
         if (game.getNumberOfCalledCalls() == 4) {
             //send Data
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
@@ -742,25 +813,23 @@ public class GameLogic {
                 } else {
                     player1.setMyTurn(false);
                 }
-                try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+
             }));
             //deshalb weil wir den aktuellen hier noch brauchen
             defineCaller(game);
+            return false;
         } else {
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 if (player1.isMyTurn()) {
                     game.getTeams().forEach(team1 -> team.getPlayers().forEach(player2 -> {
-                        if (player2.getPlayerNumber() == player1.getPlayerNumber() % 4 + 1) {
+                        if (player2.getPlayerNumber() == (player1.getPlayerNumber() % 4) + 1) {
                             player2.setMyTurn(true);
                         }
                     }));
+                    player1.setMyTurn(false);
                 }
             }));
-            player.setMyTurn(false);
+            return true;
         }
     }
 

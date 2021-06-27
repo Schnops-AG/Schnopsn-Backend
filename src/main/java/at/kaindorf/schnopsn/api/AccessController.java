@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.TextMessage;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.*;
 
 
@@ -20,16 +22,16 @@ public class AccessController {
     private GameStorage storage = GameStorage.getInstance();
     private ObjectMapper mapper = new ObjectMapper();
 
-    // TODO: nach jedem Stich buffer überprüfen
+    // TODO: nach jedem Stich buffer überprüfen //finished
     //TODO: check three cases of SCHNAPSER
-    //TODO:färeblpflicht + stechpflicht 4er Schnopsn
+    //TODO:färeblpflicht + stechpflicht 4er Schnopsn //finished
     //TODO: Frontend besprechen: Farbenringerl, available Calls
-    //TODO: handkarten in sendstingData anschauen
-    //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten)
-    //TODO: 20er40er schauen ob fertig (von sendStingData Methode)
+    //TODO: handkarten in sendstingData anschauen // finished
+    //TODO: priority bei makeMoveByCall zurückgeben (1.Element betracheten) //finished
+    //TODO: 20er40er schauen ob fertig (von sendStingData Methode) //finished
     //TODO: JavaDocs machen
-    //TODO: aufdehen (4erSchnopsn) - random card
-    //TODO: priority bei calls (Schnapser, Gang, ...)
+    //TODO: aufdehen (4erSchnopsn) - random card //finished
+    //TODO: priority bei calls (Schnapser, Gang, ...) //finished
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -386,8 +388,11 @@ public class AccessController {
     }
 
     @PostMapping(path = "/callTrump")
-    public Object startRound(@RequestParam("gameID") String gameID, @RequestParam("color") String color) {
-
+    public Object startRound(@RequestParam("gameID") String gameID,@RequestParam String playerID, @RequestParam("color") String color) {
+        // if invalid playerID
+        if (playerID == null || playerID.length() != 36) {
+            return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerID: must be type UUID!"));
+        }
         // if invalid gameID
         if (gameID == null || gameID.length() != 36) {
             return ResponseEntity.status(400).body("Empty or invalid gameID: must be type UUID!");
@@ -406,13 +411,26 @@ public class AccessController {
         }
 
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        game.setCurrentTrump(realColor);
+        Player playerTrump = GameLogic.findPlayer(storage.getActivePlayers(),playerID);
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 2);
+        Card trumpColorCard = null;
+        if(realColor==Color.RANDOM){
+            trumpColorCard =playerCardMap.get(playerTrump).get(0);
+            game.setCurrentTrump(trumpColorCard.getColor());
+        }
+        else{
+            try {
+                trumpColorCard = new Card("temp",1,new URL("http://link1"),realColor,true);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            game.setCurrentTrump(realColor);
+        }
         for (Player player : playerCardMap.keySet()) {
             game.getPlayerCardMap().get(player).addAll(playerCardMap.get(player));
             try {
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("cards", game.getPlayerCardMap().get(player))))); // return all 5 cards
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump", realColor))));
+                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("trump", trumpColorCard))));
                 player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player.isMyTurn()))));
             } catch (IOException e) {
                 e.printStackTrace();
@@ -454,7 +472,7 @@ public class AccessController {
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
         game.setNumberOfCalledCalls(game.getNumberOfCalledCalls() + 1);
         logic.isCallHigher(game, validCall, player);
-        logic.callPeriod(game, mapper, player);
+        boolean callPeriod= logic.callPeriod(game, mapper, player);
 
         game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
@@ -464,6 +482,16 @@ public class AccessController {
                 e.printStackTrace();
             }
         }));
+        //Benachrichtigen dass keine Calls mehr gemacht werden
+        if(!callPeriod){
+            game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
+            try {
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("message", "finished with Calls!"))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            }));
+        }
 
         return ResponseEntity.status(200).body(new Message("info", "status: 200"));
     }
