@@ -2,7 +2,10 @@ package at.kaindorf.schnopsn.api;
 
 import at.kaindorf.schnopsn.beans.*;
 import at.kaindorf.schnopsn.bl.GameLogic;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.socket.TextMessage;
@@ -24,8 +27,7 @@ public class AccessController {
 
     //TODO: JavaDocs machen
     //TODO: check three cases of SCHNAPSER
-    //TODO: Frontend besprechen: Farbenringerl, available Calls
-    //TODO: priority bei calls (Schnapser, Gang, ...) //finished
+    //TODO: Frontend besprechen: Farbenringerl
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -96,12 +98,22 @@ public class AccessController {
                     game.getTeams().get(0).getPlayers().add(player);
                 }
             }
+            int count=0;
+            for (Team team:game.getTeams()) {
+                for (Player player1: team.getPlayers()) {
+                    count++;
+                }
+            }
+            final int finalCount = count;
 
             //System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     // if: more players join than allowed in a room
                     player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("join", logic.getAllCurrentPlayerNames(game)))));
+                    if(finalCount== game.getMaxNumberOfPlayers()){
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("game", game))));
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -263,8 +275,15 @@ public class AccessController {
             Color color = game.getPlayerCardMap().get(player).stream().filter(card ->  card.isPriority()).findFirst().get().getColor();
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 System.out.println(player1.isCaller());
+                String jsonString="";
                 try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message(type+"er mit "+color, player.getPlayerName()))));
+                    jsonString = new JSONObject().put("color",color).put("player",player.getPlayerID()).toString();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    //player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message(type+"er mit "+color, player.getPlayerID()))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message(type+"er", jsonString))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -381,7 +400,7 @@ public class AccessController {
     }
 
     @PostMapping(path = "/callTrump")
-    public Object startRound(@RequestParam("gameID") String gameID,@RequestParam String playerID, @RequestParam("color") String color) {
+    public Object startRound(@RequestParam("gameID") String gameID,@RequestParam("playerID") String playerID, @RequestParam("color") String color) {
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
             return ResponseEntity.status(400).body(new Message("error", "Empty or invalid playerID: must be type UUID!"));
@@ -495,8 +514,8 @@ public class AccessController {
         return ResponseEntity.status(200).body(new Message("info", "status: 200"));
     }
 
-    @GetMapping(path = "/getAvailableCalls")
-    public Object getAvailableCalls(@RequestParam("gameID") String gameID, @RequestParam String playerID){
+    @PostMapping(path = "/getAvailableCalls")
+    public Object getAvailableCalls(@RequestParam("gameID") String gameID, @RequestParam("playerID") String playerID){
         // if invalid playerID
         if (playerID == null || playerID.length() != 36) {
             return ResponseEntity.status(400).body("Empty or invalid playerID: must be type UUID!");
@@ -511,7 +530,21 @@ public class AccessController {
             return ResponseEntity.status(404).body("No player found");
         }
         Game game = GameLogic.findGame(storage.getActiveGames(), gameID);
-        return ResponseEntity.status(200).body(new Message("availableCalls", Call.values()));
+        List<Call> calls = new ArrayList<>();
+        calls.addAll(Arrays.asList(Call.values()));
+        System.out.println("managed");
+
+        if(player.isCaller()){
+            calls.remove(Call.KONTRABAUER);
+            calls.remove(Call.KONTRASCHNAPSER);
+            calls.remove(Call.KONTRATRUMPFFARBENRINGERL);
+        }
+        else{
+            calls.remove(Call.SCHNAPSER);
+            calls.remove(Call.BAUER);
+            calls.remove(Call.TRUMPFFARBENRINGERL);
+        }
+        return ResponseEntity.status(200).body(new Message("availableCalls", calls));
     }
 
 }

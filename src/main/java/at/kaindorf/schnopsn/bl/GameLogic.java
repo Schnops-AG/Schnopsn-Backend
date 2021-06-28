@@ -544,7 +544,7 @@ public class GameLogic {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzen
-
+                        System.out.println("Färbeln: " + game.isFaerbeln());
                         if (game.isFaerbeln()) {
                             if (game.getGameType() == GameType._2ERSCHNOPSN) {
                                 defineValidCards2erSchnopsn(game, player1);
@@ -584,7 +584,15 @@ public class GameLogic {
                         game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setBuffer(0);
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
+                        //Stingscore an alle im Team schicken
+                        game.getTeams().get((winner.getPlayerNumber()+1)%2).getPlayers().stream().forEach(player2 ->{
+                            try {
+                                player2.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
 
@@ -622,7 +630,7 @@ public class GameLogic {
             }
             //beim 4er Schnopsn überprüfen ob ansage durchgeht und Punkte vergeben
             else if (game.getGameType() == GameType._4ERSCHNOPSN) {
-                //sendAdditionalData4erSchnopsn(game, mapper, winner);
+                sendAdditionalData4erSchnopsn(game, mapper, winner);
             }
             game.getPlayedCards().clear();
 
@@ -657,6 +665,20 @@ public class GameLogic {
         } else {
             awardForPoints4erSchnopsn(game.getTeams().get((calledPlayer.getPlayerNumber() + 1) % 2).getPlayers().get(0), game);
         }
+
+        boolean bummerltime=false;
+        //send gameScore
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
+            Map<String, Integer> gameScore = new LinkedHashMap<>();
+            gameScore.put("myScore",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentGameScore());
+            gameScore.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentGameScore());
+
+            try {
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore",gameScore))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
 
     }
 
