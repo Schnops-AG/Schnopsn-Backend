@@ -658,27 +658,23 @@ public class GameLogic {
         //makeRightMove
         //check if succeeds
         if (checkCall(game, calledPlayer)) {
-            if (game.getNumberOfStingsPerRound() == 5) {
+            if(game.getCurrentHighestCall()==Call.NORMAL && game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentScore()>65){
+                awardForPoints4erSchnopsn(winner,game);
+                sendScoreDataToPlayers4erSchnopsn(game,mapper,winner);
+            }
+            else if((game.getCurrentHighestCall()==Call.SCHNAPSER || game.getCurrentHighestCall()==Call.KONTRASCHNAPSER) &&game.getTeams().get((calledPlayer.getPlayerNumber()+1)%2).getCurrentScore()>65){
                 awardForPoints4erSchnopsn(calledPlayer, game);
+                sendScoreDataToPlayers4erSchnopsn(game,mapper,calledPlayer);
+            }
+            else if (game.getNumberOfStingsPerRound() == 5) {
+                awardForPoints4erSchnopsn(calledPlayer, game);
+                sendScoreDataToPlayers4erSchnopsn(game,mapper,calledPlayer);
             }
             //ok
         } else {
-            awardForPoints4erSchnopsn(game.getTeams().get((calledPlayer.getPlayerNumber() + 1) % 2).getPlayers().get(0), game);
+            awardForPoints4erSchnopsn(game.getTeams().get(calledPlayer.getPlayerNumber() % 2).getPlayers().get(0), game);
+            sendScoreDataToPlayers4erSchnopsn(game,mapper,game.getTeams().get(calledPlayer.getPlayerNumber() % 2).getPlayers().get(0));
         }
-
-        boolean bummerltime=false;
-        //send gameScore
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
-            Map<String, Integer> gameScore = new LinkedHashMap<>();
-            gameScore.put("myScore",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentGameScore());
-            gameScore.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentGameScore());
-
-            try {
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore",gameScore))));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }));
 
     }
 
@@ -694,7 +690,7 @@ public class GameLogic {
 
             //The player has to reach 66 or more points with three stings
             case SCHNAPSER, KONTRASCHNAPSER:
-                if ((game.getNumberOfStingsPerRound() == calledPlayer.getNumberOfStingsPerRound()) && game.getNumberOfStingsPerRound() < 3) {
+                if ((game.getNumberOfStingsPerRound() == calledPlayer.getNumberOfStingsPerRound()) && game.getNumberOfStingsPerRound() <= 3) {
                     return true;
                 }
                 break;
@@ -704,8 +700,45 @@ public class GameLogic {
                 if (game.getNumberOfStingsPerRound() <= 5 && calledPlayer.getNumberOfStingsPerRound() == 0)
                     return true;
                 break;
+            case NORMAL:
+                return true;
         }
         return false;
+    }
+
+    public void sendScoreDataToPlayers4erSchnopsn(Game game, ObjectMapper mapper, Player winner){
+        //send gameScore
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
+            Map<String, Integer> gameScore = new LinkedHashMap<>();
+            gameScore.put("myScore",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentGameScore());
+            gameScore.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentGameScore());
+
+            try {
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore",gameScore))));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+
+        //Bummerlzeit
+        if(game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentGameScore()>23){
+            game.getTeams().stream().forEach(team -> {
+                team.setCurrentGameScore(0);
+            });
+            game.getTeams().get(winner.getPlayerNumber()%2).setCurrentBummerl(game.getTeams().get(winner.getPlayerNumber()%2).getCurrentBummerl()+1);
+
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
+                Map<String, Integer> bummerl = new LinkedHashMap<>();
+                bummerl.put("myBummerl",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentBummerl());
+                bummerl.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentBummerl());
+
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl",bummerl))));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }));
+        }
     }
 
     public void sendAdditionalData2erSchnopsn(Game game, ObjectMapper mapper, Player winner) {

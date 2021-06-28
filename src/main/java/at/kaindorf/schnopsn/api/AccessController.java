@@ -26,8 +26,8 @@ public class AccessController {
     private ObjectMapper mapper = new ObjectMapper();
 
     //TODO: JavaDocs machen
-    //TODO: check three cases of SCHNAPSER
-    //TODO: Frontend besprechen: Farbenringerl
+    //TODO: check three cases of SCHNAPSER //finished
+    //TODO: Frontend besprechen: Farbenringerl //finished
 
     @PostMapping(path = "/createPlayer")
     public Object createUser(@RequestParam("playerName") String playerName) {
@@ -154,6 +154,7 @@ public class AccessController {
         //Stichpunkte zurücksetzen
         for (Team team : game.getTeams()) {
             team.setCurrentScore(0);
+            team.setBuffer(0);
         }
         game.getPlayedCards().clear();
 
@@ -289,19 +290,52 @@ public class AccessController {
                 }
             }));
             //schick ihm seine neuen stichpunkte und priorityCards
-            try {
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()))));
-                //automatisch nachrichten zum beenden der Runde schicken und priorities zurückstellen
-                if(logic.checkIfRoundOver(game,mapper,player)){
-                    game.getPlayerCardMap().get(player).stream().forEach(card -> {
-                        card.setPriority(true);
-                    });
+            if(game.getGameType()==GameType._2ERSCHNOPSN) {
+                try {
+                    player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player.getPlayerNumber() + 1) % 2).getCurrentScore()))));
+                    //automatisch nachrichten zum beenden der Runde schicken und priorities zurückstellen
+                    if (logic.checkIfRoundOver(game, mapper, player)) {
+                        game.getPlayerCardMap().get(player).stream().forEach(card -> {
+                            card.setPriority(true);
+                        });
+                    }
+                    player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                player.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player)))));
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-            //schau ob mit ansage die Runde vorbei ist
+            else if(game.getGameType()==GameType._4ERSCHNOPSN){
+                //setzte stiche so dass er keine mehr machen kann
+                if((game.getCurrentHighestCall()==Call.SCHNAPSER || game.getCurrentHighestCall()==Call.KONTRASCHNAPSER) &&player.isPlaysCall()){
+                    if(type==20){
+                        player.setNumberOfStingsPerRound(player.getNumberOfStingsPerRound()+1);
+                        game.setNumberOfStingsPerRound(game.getNumberOfStingsPerRound()+1);
+                    }
+                    else if(type==40){
+                        player.setNumberOfStingsPerRound(player.getNumberOfStingsPerRound()+2);
+                        game.setNumberOfStingsPerRound(game.getNumberOfStingsPerRound()+2);
+                    }
+                    //Wenn Call noch ok und fertig dann award ihn sonst den Gegner
+                    if(logic.checkCall(game,player)){
+                        if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()>65){
+                            logic.awardForPoints4erSchnopsn(player,game);
+                            logic.sendScoreDataToPlayers4erSchnopsn(game,mapper,player);
+                        }
+                    }
+                    else{
+                        logic.awardForPoints4erSchnopsn(game.getTeams().get(player.getPlayerNumber()%2).getPlayers().get(0),game);
+                        logic.sendScoreDataToPlayers4erSchnopsn(game,mapper,game.getTeams().get(player.getPlayerNumber()%2).getPlayers().get(0));
+                    }
+                }
+                //Bei normalen spiel nur schauen ob fertig ist dann award
+                else if(game.getCurrentHighestCall()==Call.NORMAL){
+                    if(game.getTeams().get((player.getPlayerNumber()+1)%2).getCurrentScore()>65){
+                        logic.awardForPoints4erSchnopsn(player,game);
+                        logic.sendScoreDataToPlayers4erSchnopsn(game, mapper,player);
+                    }
+                }
+
+            }
 
             return ResponseEntity.status(200).body(new Message("20er", "call 20er successful"));
         }
@@ -373,6 +407,10 @@ public class AccessController {
         Map<Player, List<Card>> playerCardMap = logic.giveOutCards(game, 3);
         game.setPlayerCardMap(playerCardMap);
         game.getPlayedCards().clear();
+        game.getTeams().stream().forEach(team -> {
+            team.setCurrentScore(0);
+            team.setBuffer(0);
+        });
         for (Player player : game.getPlayerCardMap().keySet()) {
             player.setActive(true);
             player.setMyTurn(false);
@@ -491,6 +529,41 @@ public class AccessController {
 
         //Benachrichtigen dass keine Calls mehr gemacht werden
         if(!callPeriod){
+
+            switch(game.getCurrentHighestCall()){
+                case FARBENRINGERL,TRUMPFFARBENRINGERL,KONTRATRUMPFFARBENRINGERL:
+                    Player callPlayer=null;
+                    for (Team team : game.getTeams()) {
+                        callPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().orElse(null);
+                        if (callPlayer != null) {
+                            break;
+                        }
+                    }
+                    boolean sameColor =true;
+                    Color firstColor = game.getPlayerCardMap().entrySet().iterator().next().getValue().get(0).getColor();
+                    switch(game.getCurrentHighestCall()){
+                        case FARBENRINGERL:
+                            for (Card card: game.getPlayerCardMap().get(callPlayer)) {
+                                if(card.getColor()!=firstColor){
+                                    sameColor=false;
+                                }
+                            }
+                            break;
+                        case TRUMPFFARBENRINGERL,KONTRATRUMPFFARBENRINGERL:
+                            for (Card card: game.getPlayerCardMap().get(callPlayer)) {
+                                if(card.getColor()!=firstColor || firstColor!=game.getCurrentTrump()){
+                                    sameColor=false;
+                                }
+                            }
+                            break;
+                    }
+                    if(sameColor){
+                        logic.awardForPoints4erSchnopsn(callPlayer,game);
+                        logic.sendScoreDataToPlayers4erSchnopsn(game,mapper,callPlayer);
+                    }
+                    break;
+            }
+
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
             try {
                 player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
