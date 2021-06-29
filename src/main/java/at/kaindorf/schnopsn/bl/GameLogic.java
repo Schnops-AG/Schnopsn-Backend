@@ -705,7 +705,7 @@ public class GameLogic {
         //makeRightMove
         //check if succeeds
         if (checkCall(game, calledPlayer)) {
-            if (game.getCurrentHighestCall() == Call.NORMAL && game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
+            if (game.getCurrentHighestCall() == Call.NORMAL && (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65 || getAllHandCrads(game)==0)) {
                 awardForPoints4erSchnopsn(winner, game);
                 sendScoreDataToPlayers4erSchnopsn(game, mapper, winner);
             } else if ((game.getCurrentHighestCall() == Call.SCHNAPSER || game.getCurrentHighestCall() == Call.KONTRASCHNAPSER) && game.getTeams().get((calledPlayer.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
