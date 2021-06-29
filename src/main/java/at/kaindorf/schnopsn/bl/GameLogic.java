@@ -184,11 +184,7 @@ public class GameLogic {
                     playCards.remove(temp);
                     count--;
                     break;
-                } else if (trump == null && temp.getColor() != firstColor) {
-                    playCards.remove(temp);
-                    count--;
-                    break;
-                } else if (game.getGameType() == GameType._2ERSCHNOPSN && temp.getColor() != firstColor) {
+                } else if ( temp.getColor()!=trump && temp.getColor() != firstColor) {
                     playCards.remove(temp);
                     count--;
                     break;
