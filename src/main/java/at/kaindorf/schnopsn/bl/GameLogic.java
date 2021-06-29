@@ -630,10 +630,11 @@ public class GameLogic {
                         game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setCurrentScore(game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore() + game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getBuffer());
                         game.getTeams().get((player1.getPlayerNumber() + 1) % 2).setBuffer(0);
 
-                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
+
                         //Stingscore an alle im Team schicken
                         game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getPlayers().stream().forEach(player2 -> {
                             try {
+                                player2.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
                                 player2.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
                             } catch (IOException e) {
                                 e.printStackTrace();
@@ -756,17 +757,20 @@ public class GameLogic {
      * */
     public void sendScoreDataToPlayers4erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
         //send gameScore
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+        int index=0;
+        for (Team team:game.getTeams()) {
             Map<String, Integer> gameScore = new LinkedHashMap<>();
-            gameScore.put("myScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentGameScore());
-            gameScore.put("opponents", game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentGameScore());
-
-            try {
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore", gameScore))));
-            } catch (IOException e) {
-                e.printStackTrace();
+            gameScore.put("myScore", game.getTeams().get(index%2).getCurrentGameScore());
+            gameScore.put("opponents", game.getTeams().get((index+1) %2).getCurrentGameScore());
+            for (Player player1:team.getPlayers()) {
+                try {
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore", gameScore))));
+                } catch (IOException e) {
+                    //e.printStackTrace();
+                }
             }
-        }));
+            index++;
+        }
 
         //Bummerlzeit
         if (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentGameScore() > 23) {
@@ -775,17 +779,21 @@ public class GameLogic {
             });
             game.getTeams().get(winner.getPlayerNumber() % 2).setCurrentBummerl(game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentBummerl() + 1);
 
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
+            int indexB=0;
+            for (Team team:game.getTeams()) {
                 Map<String, Integer> bummerl = new LinkedHashMap<>();
-                bummerl.put("myBummerl", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentBummerl());
-                bummerl.put("opponents", game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentBummerl());
-
-                try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl", bummerl))));
-                } catch (IOException e) {
-                    e.printStackTrace();
+                bummerl.put("myBummerl", game.getTeams().get(indexB%2).getCurrentBummerl());
+                bummerl.put("opponentsBummerl", game.getTeams().get((indexB+1) %2).getCurrentBummerl());
+                for (Player player1:team.getPlayers()) {
+                    try {
+                        player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl", bummerl))));
+                    } catch (IOException e) {
+                        //e.printStackTrace();
+                    }
                 }
-            }));
+                indexB++;
+            }
+
         }
     }
 
