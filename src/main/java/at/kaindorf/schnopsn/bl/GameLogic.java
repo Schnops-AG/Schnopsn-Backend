@@ -499,7 +499,6 @@ public class GameLogic {
         ObjectMapper mapper = new ObjectMapper();
 
         if (winnerID == null) {
-            //System.out.println("kein gewinner");
             //Sends a message to all players, about who will play next
             // Spieler der gerade dran war
             Player turnPlayer = null;
@@ -591,16 +590,6 @@ public class GameLogic {
 
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
-
-
-                        //checken ob zudreher alle Stiche macht
-                        /*if(game.getGameType()== GameType._2ERSCHNOPSN && game.isFaerbeln() && zudreher!=null){
-                            System.out.println("es gibt zudreher");
-                            if(zudreher.getPlayerID()!= player1.getPlayerID()){
-                                System.out.println("zudreher hat verloren");
-                                game.getTeams().get((player1.getPlayerNumber()+1)%2).setCurrentScore(66);
-                            }
-                        }*/
 
 
                     } else {

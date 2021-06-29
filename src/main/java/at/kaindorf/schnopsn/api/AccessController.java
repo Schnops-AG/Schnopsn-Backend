@@ -106,7 +106,6 @@ public class AccessController {
             }
             final int finalCount = count;
 
-            //System.out.println(game);
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
                 try {
                     // if: more players join than allowed in a room
@@ -176,11 +175,6 @@ public class AccessController {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-//            if (player.isMyTurn()) {
-//                player.setMyTurn(false);
-//            } else {
-//                player.setMyTurn(true);
-//            }
         }
         logic.defineCaller(game);
 
