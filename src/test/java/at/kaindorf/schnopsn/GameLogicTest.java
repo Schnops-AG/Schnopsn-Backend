@@ -18,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GameLogicTest {
     GameLogicTestClass gltc = new GameLogicTestClass();
 
+    /**
+     *  This test method tests our method "makeCall2erSchnopsn".
+     * */
     @DisplayName("makeCall2erSchnopsn Test")
     @Test
     public void makeCall2erSchnopsnTest() {

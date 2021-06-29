@@ -15,7 +15,9 @@ public class Game {
     private Map<Player, Card> playedCards;
     //Stapel (welche Karten man noch ziehen kann)
     private List<Card> availableCards;
+    //Anzahl der bereits gemachten Calls 4erSchnopsn
     private int numberOfCalledCalls;
+    //Wie viele Stiche in dieser runde gamcht wurden
     private int numberOfStingsPerRound;
     //Karten auf der Hand pro Spieler
     private Map<Player,List<Card>> playerCardMap;

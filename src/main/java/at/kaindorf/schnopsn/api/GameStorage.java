@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameStorage {
+    /**
+     * This is a singleton class, where we store our "activeGames" list and our "activePlayers" list.
+     * */
     private final List<Game> activeGames = new ArrayList<>();
     private final List<Player> activePlayers = new ArrayList<>();
     private static GameStorage instance;

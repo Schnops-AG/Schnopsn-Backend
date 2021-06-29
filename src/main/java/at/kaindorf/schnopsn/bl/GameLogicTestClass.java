@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 public class GameLogicTestClass {
-    //When someone wants to call a 20er or 40er
+    /**
+     *  Method to test our makeCall2erSchnopsn method without any requests.
+     * */
     public int makeCall2erSchnopsn(List<Card> handCards, Color currentTrump) {
         //Becomes true if the first card is found
         boolean foundFirstCard = false;

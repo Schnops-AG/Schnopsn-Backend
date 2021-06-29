@@ -12,12 +12,18 @@ import java.util.UUID;
 public class Player {
     private UUID playerID;
     private String playerName;
+    //True bei dem der Trumpf ansagt
     private boolean caller;
+    //True bei dem der seinen Call spielen darf 4er Schnopsn
     private boolean playsCall;
     private int playerNumber;
+    //True bei dem der das spiel erstellt hat
     private boolean admin;
+    //True bei dem der jetzt an der reihe ist zum ausspielen
     private boolean myTurn;
+    //anzahl der Stiche die er in dieser runde gamacht hat
     private int numberOfStingsPerRound;
+    //False bei dem Teammitglied von dem der einen BETTLER,ASSENBETTLER oder PLAUDERER spielt
     private boolean active;
     //wer zudreht
     private boolean zudreher;

@@ -20,6 +20,9 @@ public class GameLogic {
     private GameStorage storage = GameStorage.getInstance();
 
     public GameLogic() {
+        /**
+         *  We add all possible cards to a card list.
+         * */
         try {
             allCards.add(new Card("Bur", 2, new URL("http://link"), Color.KARO, true));
             allCards.add(new Card("Dame", 3, new URL("http://link"), Color.KARO, true));
@@ -49,7 +52,9 @@ public class GameLogic {
         }
     }
 
-    //erstellt ein Game
+    /**
+     * Creates a game.
+     * */
     public Game createGame(GameType gameType, Player player) {
         Game game = null;
         List<Player> players = new ArrayList<>();
@@ -68,7 +73,9 @@ public class GameLogic {
         return game;
     }
 
-    //generiert einen invitelink zu einem Game
+    /**
+     *  Method to generate an invite link.
+     * */
     public URL generateInviteLink(Game game) {
         URL inviteLink;
         try {
@@ -79,28 +86,40 @@ public class GameLogic {
         return inviteLink;
     }
 
-    //sucht sich einen Spieler aus allen aktiven Spielern
+    /**
+     * This method returns one specific player.
+     * */
     public static Player findPlayer(List<Player> activePlayers, String playerID) throws IllegalArgumentException {
         UUID realPlayerID = UUID.fromString(playerID);
         return activePlayers.stream().filter(player1 -> player1.getPlayerID().equals(realPlayerID)).findFirst().orElse(null);
     }
 
-    //sucht sich ein Game aus allen aktiven Games
+    /**
+     * This method returns one specific game.
+     * */
     public static Game findGame(List<Game> activeGames, String gameID) {
         UUID realGameID = UUID.fromString(gameID);
         return activeGames.stream().filter(game1 -> game1.getGameID().equals(realGameID)).findFirst().orElse(null);
     }
 
+    /**
+     * This method returns the current number of players.
+     * */
     public static int getCurrentNumberOfPlayers(Game game) {
         return game.getTeams().get(0).getPlayers().size() + game.getTeams().get(1).getPlayers().size();
     }
 
+    /**
+     * This method returns one card.
+     * */
     public Card getCard(String color, int value) {
         Color realColor = Color.valueOf(color.toUpperCase());
         return allCards.stream().filter(card -> card.getColor().equals(realColor) && card.getValue() == value).findFirst().orElse(null);
     }
 
-    //überprüft ob eine Ansage höher als die aktuell höchste Ansage in einem Spiel ist
+    /**
+     * This method checks if a call is higher than the current highest call in a game.
+     * */
     public boolean isCallHigher(Game game, Call call, Player player) {
         Call currentHighestCall = game.getCurrentHighestCall();
         if (call.getValue() > currentHighestCall.getValue()) {
@@ -111,7 +130,6 @@ public class GameLogic {
                 }
 
             } catch (NoSuchElementException e) {
-                //e.printStackTrace();
                 //noch keiner was angesagt
             }
             player.setPlaysCall(true);
@@ -120,7 +138,9 @@ public class GameLogic {
         return false;
     }
 
-    //wartet bis alle Spieler ausgespielt haben und holt sich dann den Gewinner
+    /**
+     *  This method checks if all moves of every player is correct, depending on the current call.
+     * */
     public UUID makeRightMove(Game game, Card card, Player player) {
         switch (game.getCurrentHighestCall()) {
             case BETTLER, ASSENBETTLER, PLAUDERER:
@@ -154,7 +174,9 @@ public class GameLogic {
         return null;
     }
 
-    //definiertwelcher Spieler den Stich bekommt (welche Karte die Höchste ist)
+    /**
+     *  This method checks which player has played the highest card.
+     * */
     public UUID getPlayerWithHighestCard(Map<Player, Card> playMap, Color trump, Game game) {
         List<Card> playCards = new ArrayList<>();
 
@@ -184,7 +206,7 @@ public class GameLogic {
                     playCards.remove(temp);
                     count--;
                     break;
-                } else if ( temp.getColor()!=trump && temp.getColor() != firstColor) {
+                } else if (temp.getColor() != trump && temp.getColor() != firstColor) {
                     playCards.remove(temp);
                     count--;
                     break;
@@ -201,7 +223,9 @@ public class GameLogic {
         return null;
     }
 
-
+    /**
+     *  This method checks if the trump is needed depending of the current call.
+     * */
     public boolean trumpNeeded(Call call) {
         return switch (call) {
             case BETTLER, ASSENBETTLER, PLAUDERER, GANG, ZEHNERGANG -> false;
@@ -209,7 +233,9 @@ public class GameLogic {
         };
     }
 
-    //vergibt punkte für ansagen
+    /**
+     *  This method awards points to the winner team.
+     * */
     public boolean awardForPoints4erSchnopsn(Player winner, Game game) {
         Call call = game.getCurrentHighestCall();
         int winnerTeam = 0;
@@ -236,7 +262,9 @@ public class GameLogic {
         return false;
     }
 
-    //Set points for the players and returns true if the round is over
+    /**
+     *  Set points for the players and returns true if the round is over.
+     * */
     public void endOfRound2erSchnopsn(Player winner, Game game, int looserPoints) {
         int winnerTeam = 1;
         int currentGameScore;
@@ -259,6 +287,9 @@ public class GameLogic {
         }
     }
 
+    /**
+     *  Returns all player names of a specific game.
+     * */
     public String getAllCurrentPlayerNames(Game game) {
         String allNames = "";
         for (Team team : game.getTeams()) {
@@ -270,17 +301,23 @@ public class GameLogic {
         return allNames;
     }
 
-    public Player getActualCaller(Game game){
-        for (Team team: game.getTeams()) {
-            for (Player player: team.getPlayers()) {
-                if(player.isCaller()){
+    /**
+     *  This method returns the current caller of a specific game.
+     * */
+    public Player getCurrentCaller(Game game) {
+        for (Team team : game.getTeams()) {
+            for (Player player : team.getPlayers()) {
+                if (player.isCaller()) {
                     return player;
                 }
             }
         }
         return null;
     }
-    //define which player is the next one who is allowed to call trump
+
+    /**
+     *  Define which player is the next one who is allowed to call trump.
+     * */
     public void defineCaller(Game game) {
         int oldCallerNumber = 0;
         for (Team team : game.getTeams()) {
@@ -289,19 +326,21 @@ public class GameLogic {
                 break;
             }
         }
-        for (Team team: game.getTeams()) {
-            for (Player player:team.getPlayers()) {
-                if(player.isCaller()){
+        for (Team team : game.getTeams()) {
+            for (Player player : team.getPlayers()) {
+                if (player.isCaller()) {
                     player.setCaller(false);
                 }
-                if(player.getPlayerNumber()== (oldCallerNumber%game.getMaxNumberOfPlayers())+1){
+                if (player.getPlayerNumber() == (oldCallerNumber % game.getMaxNumberOfPlayers()) + 1) {
                     player.setCaller(true);
                 }
             }
         }
     }
 
-    //give Cards for each player
+    /**
+     *  This method gives out cards to every player.
+     * */
     public Map<Player, List<Card>> giveOutCards(Game game, int anz) {
         if (anz != 2) {
             game.setAvailableCards(new ArrayList<>(allCards));
@@ -323,11 +362,16 @@ public class GameLogic {
         return playerCardMap;
     }
 
+    /**
+     *  This method defines the trump card in a 2erSchnopsn game.
+     * */
     public Card getTrumpCard(Game game) {
         return getRandomCard(game.getAvailableCards(), true);
     }
 
-    // get one random Card of the available Cards of a game
+    /**
+     *  Get one random Card of the available Cards of a game.
+     * */
     public Card getRandomCard(List<Card> availableCards, boolean isTrumpCard) {
         Random rand = new Random();
         int index = 0;
@@ -346,9 +390,11 @@ public class GameLogic {
         return card;
     }
 
+    /**
+     *  This method swaps your "Bur" trump card with the current trump card in a 2erSchnopsn game.
+     * */
     public boolean switchTrumpCard(Game game, Player player) {
         List<Card> handCards = game.getPlayerCardMap().get(player);
-
         for (Card card : handCards) {
             //Wenn es Trumpf bur is
             if (card.getColor() == game.getCurrentTrump() && card.getValue() == 2) {
@@ -368,6 +414,10 @@ public class GameLogic {
         return false;
     }
 
+    /**
+     *  Method to check if the player has to play a card with the same color like the card of his opponent.
+     *  (For a 2erSchnopsn game)
+     * */
     public void defineValidCards2erSchnopsn(Game game, Player player) {
         //get first played Card
         //Level3: alle Karten; Level2: Trumpfkarten; Level1:gleichfarbige Karten
@@ -425,7 +475,11 @@ public class GameLogic {
         }
     }
 
-    public void defineValidCards4erSchnopsn(Game game, Player player){
+    /**
+     *  Method to check if the player has to play a card with the same color like the card of his opponent.
+     *  (For a 4erSchnopsn game)
+     * */
+    public void defineValidCards4erSchnopsn(Game game, Player player) {
         //Level3: alle Karten; Level2:trumpfkarten; Level1:Gleichfarbige Karten; Level0: Gleichfarbige Karten mit höherem value
         Card firstCard = game.getPlayedCards().entrySet().iterator().next().getValue();
         List<Integer> levels = new ArrayList<>();
@@ -437,8 +491,7 @@ public class GameLogic {
             //Wenn nichts ausgespielt
             if (firstCard == null) {
                 levels.add(3);
-            }
-            else if(card.getColor() == firstCard.getColor() && card.getValue()> firstCard.getValue()){
+            } else if (card.getColor() == firstCard.getColor() && card.getValue() > firstCard.getValue()) {
                 levels.add(0);
             }
             //Wenn gleiche farbe
@@ -483,7 +536,7 @@ public class GameLogic {
             case 0:
                 //Karten mit gleicher Farbe und höherem value
                 for (Card card : game.getPlayerCardMap().get(player)) {
-                    if (card.getColor() == firstCard.getColor() && card.getValue()> firstCard.getValue()) {
+                    if (card.getColor() == firstCard.getColor() && card.getValue() > firstCard.getValue()) {
                         card.setPriority(true);
                     }
                 }
@@ -492,8 +545,9 @@ public class GameLogic {
 
     }
 
-    //handkarten anschauen
-    //sendData toPlayers after one has played out a card
+    /**
+     *  Sends data to players after one has played out a card.
+     * */
     public void sendStingDataToPlayers(Game game, UUID winnerID) {
         List<Card> cards = new ArrayList<>(game.getPlayedCards().values());
         ObjectMapper mapper = new ObjectMapper();
@@ -539,12 +593,10 @@ public class GameLogic {
                         player1.setMyTurn(true);
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", true))));
                         //priorities setzen
-                        System.out.println("Färbeln: " + game.isFaerbeln());
                         if (game.isFaerbeln()) {
                             if (game.getGameType() == GameType._2ERSCHNOPSN) {
                                 defineValidCards2erSchnopsn(game, player1);
-                            }
-                            else if(game.getGameType() == GameType._4ERSCHNOPSN){
+                            } else if (game.getGameType() == GameType._4ERSCHNOPSN) {
                                 defineValidCards4erSchnopsn(game, player1);
                             }
                             player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
@@ -580,7 +632,7 @@ public class GameLogic {
 
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("sting", cards))));
                         //Stingscore an alle im Team schicken
-                        game.getTeams().get((winner.getPlayerNumber()+1)%2).getPlayers().stream().forEach(player2 ->{
+                        game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getPlayers().stream().forEach(player2 -> {
                             try {
                                 player2.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("stingScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentScore()))));
                             } catch (IOException e) {
@@ -598,11 +650,10 @@ public class GameLogic {
                         player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("myTurn", player1.isMyTurn()))));
                     }
 
-                    for (Card card:game.getPlayerCardMap().get(player1)) {
+                    for (Card card : game.getPlayerCardMap().get(player1)) {
                         card.setPriority(true);
                     }
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards",game.getPlayerCardMap().get(player1)))));
-
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("priorityCards", game.getPlayerCardMap().get(player1)))));
 
 
                 } catch (IOException e) {
@@ -622,10 +673,13 @@ public class GameLogic {
         }
     }
 
-    public Player getZudreher(Game game){
-        for (Team team:game.getTeams()) {
-            for (Player player:team.getPlayers()) {
-                if(player.isZudreher()){
+    /**
+     *  This method returns the player who "hat zugedreht" in a 2erSchonpsn game.
+     * */
+    public Player getZudreher(Game game) {
+        for (Team team : game.getTeams()) {
+            for (Player player : team.getPlayers()) {
+                if (player.isZudreher()) {
                     return player;
                 }
             }
@@ -633,12 +687,15 @@ public class GameLogic {
         return null;
     }
 
+    /**
+     *  Sends data to players after one has played out a card.
+     * */
     public void sendAdditionalData4erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
         Call call = game.getCurrentHighestCall();
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
-            if(calledPlayer != null){
+            if (calledPlayer != null) {
                 break;
             }
             calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get();
@@ -646,28 +703,28 @@ public class GameLogic {
         //makeRightMove
         //check if succeeds
         if (checkCall(game, calledPlayer)) {
-            if(game.getCurrentHighestCall()==Call.NORMAL && game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentScore()>65){
-                awardForPoints4erSchnopsn(winner,game);
-                sendScoreDataToPlayers4erSchnopsn(game,mapper,winner);
-            }
-            else if((game.getCurrentHighestCall()==Call.SCHNAPSER || game.getCurrentHighestCall()==Call.KONTRASCHNAPSER) &&game.getTeams().get((calledPlayer.getPlayerNumber()+1)%2).getCurrentScore()>65){
+            if (game.getCurrentHighestCall() == Call.NORMAL && game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
+                awardForPoints4erSchnopsn(winner, game);
+                sendScoreDataToPlayers4erSchnopsn(game, mapper, winner);
+            } else if ((game.getCurrentHighestCall() == Call.SCHNAPSER || game.getCurrentHighestCall() == Call.KONTRASCHNAPSER) && game.getTeams().get((calledPlayer.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) {
                 awardForPoints4erSchnopsn(calledPlayer, game);
-                sendScoreDataToPlayers4erSchnopsn(game,mapper,calledPlayer);
-            }
-            else if (game.getNumberOfStingsPerRound() == 5) {
+                sendScoreDataToPlayers4erSchnopsn(game, mapper, calledPlayer);
+            } else if (game.getNumberOfStingsPerRound() == 5) {
                 awardForPoints4erSchnopsn(calledPlayer, game);
-                sendScoreDataToPlayers4erSchnopsn(game,mapper,calledPlayer);
+                sendScoreDataToPlayers4erSchnopsn(game, mapper, calledPlayer);
             }
             //ok
         } else {
             awardForPoints4erSchnopsn(game.getTeams().get(calledPlayer.getPlayerNumber() % 2).getPlayers().get(0), game);
-            sendScoreDataToPlayers4erSchnopsn(game,mapper,game.getTeams().get(calledPlayer.getPlayerNumber() % 2).getPlayers().get(0));
+            sendScoreDataToPlayers4erSchnopsn(game, mapper, game.getTeams().get(calledPlayer.getPlayerNumber() % 2).getPlayers().get(0));
         }
 
     }
 
 
-    //checks if the current call is still valid
+    /**
+     *  Checks if the current call is still valid.
+     * */
     public boolean checkCall(Game game, Player calledPlayer) {
         switch (game.getCurrentHighestCall()) {
             //The player has to win the game with all stings
@@ -694,34 +751,37 @@ public class GameLogic {
         return false;
     }
 
-    public void sendScoreDataToPlayers4erSchnopsn(Game game, ObjectMapper mapper, Player winner){
+    /**
+     *  This method sends messages to all players about the current score in a 4erSchnopsn game.
+     * */
+    public void sendScoreDataToPlayers4erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
         //send gameScore
-        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
+        game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
             Map<String, Integer> gameScore = new LinkedHashMap<>();
-            gameScore.put("myScore",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentGameScore());
-            gameScore.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentGameScore());
+            gameScore.put("myScore", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentGameScore());
+            gameScore.put("opponents", game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentGameScore());
 
             try {
-                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore",gameScore))));
+                player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("gameScore", gameScore))));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }));
 
         //Bummerlzeit
-        if(game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentGameScore()>23){
+        if (game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentGameScore() > 23) {
             game.getTeams().stream().forEach(team -> {
                 team.setCurrentGameScore(0);
             });
-            game.getTeams().get(winner.getPlayerNumber()%2).setCurrentBummerl(game.getTeams().get(winner.getPlayerNumber()%2).getCurrentBummerl()+1);
+            game.getTeams().get(winner.getPlayerNumber() % 2).setCurrentBummerl(game.getTeams().get(winner.getPlayerNumber() % 2).getCurrentBummerl() + 1);
 
-            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 ->{
+            game.getTeams().stream().forEach(team -> team.getPlayers().stream().forEach(player1 -> {
                 Map<String, Integer> bummerl = new LinkedHashMap<>();
-                bummerl.put("myBummerl",game.getTeams().get((player1.getPlayerNumber()+1)%2).getCurrentBummerl());
-                bummerl.put("opponents",game.getTeams().get(player1.getPlayerNumber()%2).getCurrentBummerl());
+                bummerl.put("myBummerl", game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getCurrentBummerl());
+                bummerl.put("opponents", game.getTeams().get(player1.getPlayerNumber() % 2).getCurrentBummerl());
 
                 try {
-                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl",bummerl))));
+                    player1.getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("bummerl", bummerl))));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -729,6 +789,9 @@ public class GameLogic {
         }
     }
 
+    /**
+     *  This method sends messages to all players about the current score in a 2erSchnopsn game.
+     * */
     public void sendAdditionalData2erSchnopsn(Game game, ObjectMapper mapper, Player winner) {
         if (game.getAvailableCards().size() == 0) {
             game.getTeams().forEach(team -> team.getPlayers().forEach(player4 -> {
@@ -739,9 +802,8 @@ public class GameLogic {
                 }
             }));
         }
-        System.out.println(getAllHandCrads(game));
         //Wenn man 66 Punkte hat oder keine Karten mehr zum ziehen hat, oder letzter stich
-        if (!checkIfRoundOver(game,mapper,winner)) {
+        if (!checkIfRoundOver(game, mapper, winner)) {
             try {
                 if (!game.isFaerbeln()) {
                     //Get new Card; winner gets the new card before the looser
@@ -751,7 +813,7 @@ public class GameLogic {
                     card = getRandomCard(game.getAvailableCards(), false);
                     game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0).getSession().sendMessage(new TextMessage(mapper.writeValueAsString(new Message("newCard", card))));
                     game.getPlayerCardMap().get(game.getTeams().get((winner.getPlayerNumber()) % 2).getPlayers().get(0)).add(card);
-                    if(game.getAvailableCards().size()==0){
+                    if (game.getAvailableCards().size() == 0) {
                         game.setFaerbeln(true);
                     }
                 }
@@ -761,14 +823,15 @@ public class GameLogic {
         }
     }
 
-    public boolean checkIfRoundOver(Game game, ObjectMapper mapper, Player winner){
-        if ((game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) || (getAllHandCrads(game)==0)) {
-            //System.out.println("round over");
-            if(winner.isZudreher() && game.getTeams().get((winner.getPlayerNumber()+1)%2).getCurrentScore()<66){
-                winner = game.getTeams().get(winner.getPlayerNumber()%2).getPlayers().get(0);
-                game.getTeams().get(winner.getPlayerNumber()%2).setCurrentScore(66);
+    /**
+     *  This method checks if one round is over in a 2er Schnopsn game.
+     * */
+    public boolean checkIfRoundOver(Game game, ObjectMapper mapper, Player winner) {
+        if ((game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() > 65) || (getAllHandCrads(game) == 0)) {
+            if (winner.isZudreher() && game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore() < 66) {
+                winner = game.getTeams().get(winner.getPlayerNumber() % 2).getPlayers().get(0);
+                game.getTeams().get(winner.getPlayerNumber() % 2).setCurrentScore(66);
             }
-            //System.out.println("no cards to pull");
             sendWinnerName(game, mapper, winner);
             //Punkte vergeben
             endOfRound2erSchnopsn(winner, game, game.getTeams().get((winner.getPlayerNumber()) % 2).getCurrentScore());
@@ -815,14 +878,20 @@ public class GameLogic {
         return false;
     }
 
-    public int getAllHandCrads(Game game){
-        int anz =0;
-        for (Player player: game.getPlayerCardMap().keySet()) {
-            anz+=game.getPlayerCardMap().get(player).size();
+    /**
+     *  This method returns the current number of cards of all players.
+     * */
+    public int getAllHandCrads(Game game) {
+        int anz = 0;
+        for (Player player : game.getPlayerCardMap().keySet()) {
+            anz += game.getPlayerCardMap().get(player).size();
         }
         return anz;
     }
 
+    /**
+     *  This method sends messages to all players about the name of the winner.
+     * */
     public void sendWinnerName(Game game, ObjectMapper mapper, Player player1) {
         for (Player player3 : game.getPlayedCards().keySet()) {
             try {
@@ -833,7 +902,9 @@ public class GameLogic {
         }
     }
 
-    //A period of time where everyone can make a call
+    /**
+     * A period of time where everyone can make a call.
+     * */
     public boolean callPeriod(Game game, ObjectMapper mapper, Player player) {
         if (game.getNumberOfCalledCalls() == 4) {
             //send Data
@@ -842,7 +913,7 @@ public class GameLogic {
                     player1.setMyTurn(true);
 
                     switch (game.getCurrentHighestCall()) {
-                        case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get((player1.getPlayerNumber()+1) % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
+                        case BETTLER, ASSENBETTLER, PLAUDERER -> game.getTeams().get((player1.getPlayerNumber() + 1) % 2).getPlayers().stream().filter(player2 -> !player2.isPlaysCall()).findFirst().get().setActive(false);
                         case KONTRABAUER, KONTRASCHNAPSER -> {
                             player1.setMyTurn(false);
                             game.getTeams().forEach(team2 -> team2.getPlayers().forEach(player2 -> {
@@ -858,14 +929,14 @@ public class GameLogic {
                 }
 
             }));
-            if(!trumpNeeded(game.getCurrentHighestCall())){
+            if (!trumpNeeded(game.getCurrentHighestCall())) {
                 game.setCurrentTrump(null);
             }
             //deshalb weil wir den aktuellen hier noch brauchen
             defineCaller(game);
             return false;
         } else {
-            Player turnPlayer=player;
+            Player turnPlayer = player;
             for (Team team : game.getTeams()) {
                 turnPlayer = team.getPlayers().stream().filter(Player::isMyTurn).findFirst().orElse(null);
                 if (turnPlayer != null) {
@@ -874,7 +945,7 @@ public class GameLogic {
             }
             final Player realTurnPlayer = turnPlayer;
             game.getTeams().forEach(team -> team.getPlayers().forEach(player1 -> {
-                if(player1.getPlayerNumber() == (realTurnPlayer.getPlayerNumber() % 4) + 1){
+                if (player1.getPlayerNumber() == (realTurnPlayer.getPlayerNumber() % 4) + 1) {
                     player1.setMyTurn(true);
                 }
             }));
@@ -883,7 +954,9 @@ public class GameLogic {
         }
     }
 
-    //When someone wants to call a 20er or 40er
+    /**
+     * When someone wants to call a 20er or 40er.
+     * */
     public int makeCall2erSchnopsn(Game game, Player player) {
         List<Card> handCards = game.getPlayerCardMap().get(player);
         //Becomes true if the first card is found

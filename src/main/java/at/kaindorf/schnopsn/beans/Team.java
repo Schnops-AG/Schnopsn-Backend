@@ -8,9 +8,13 @@ import java.util.Objects;
 import java.util.UUID;
 
 public class Team {
+    //Points from 0 to 7
     private int currentGameScore;
+    // Points from 0 to 66
     private int currentScore;
+    //Bummerl
     private int currentBummerl;
+    //temp buffer for 20er or 40er
     private int buffer;
     private List<Player> players;
 
