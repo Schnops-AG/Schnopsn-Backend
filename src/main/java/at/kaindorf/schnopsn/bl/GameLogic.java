@@ -238,10 +238,10 @@ public class GameLogic {
      * */
     public boolean awardForPoints4erSchnopsn(Player winner, Game game) {
         Call call = game.getCurrentHighestCall();
-        int winnerTeam = 0;
+        int winnerTeam = 1;
         int looserScore = 0;
         if (winner.getPlayerNumber() % 2 != 0) {
-            winnerTeam = 1;
+            winnerTeam = 0;
         }
         if (game.getCurrentHighestCall() == Call.NORMAL) {
             looserScore = game.getTeams().get((winner.getPlayerNumber() + 1) % 2).getCurrentScore();
@@ -696,10 +696,11 @@ public class GameLogic {
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
+            calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().orElse(null);
             if (calledPlayer != null) {
                 break;
             }
-            calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get();
+
         }
         //makeRightMove
         //check if succeeds
