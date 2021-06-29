@@ -464,7 +464,7 @@ public class AccessController {
         game.setNumberOfCalledCalls(0);
         game.setNumberOfStingsPerRound(0);
 
-        return ResponseEntity.status(200).body("got cards successfully");
+        return ResponseEntity.status(200).body(new Message("message","got cards successfully"));
     }
     /**
      * Endpoint to define Trump for 4erSchnopsn
