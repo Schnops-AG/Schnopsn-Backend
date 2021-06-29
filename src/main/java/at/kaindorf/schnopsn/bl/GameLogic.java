@@ -653,6 +653,9 @@ public class GameLogic {
         Player calledPlayer = null;
         //Lamda um player mit playsCall true zu bekommen
         for (Team team : game.getTeams()) {
+            if(calledPlayer != null){
+                break;
+            }
             calledPlayer = team.getPlayers().stream().filter(Player::isPlaysCall).findFirst().get();
         }
         //makeRightMove
